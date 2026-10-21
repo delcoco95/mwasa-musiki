@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Administration · Mwasa Musiki</title>
+<link rel="icon" type="image/svg+xml" href="../img/logo.svg">
+<link rel="stylesheet" href="../assets/site.css">
+<link rel="stylesheet" href="../assets/admin/admin.css">
+</head>
+<body class="mw-admin">
+
+<!-- Écran de connexion -->
+<section id="login" class="mwa-login" hidden>
+  <div class="mwa-login-card">
+    <img src="../img/logo.svg" alt="Mwasa Musiki" width="150" height="82">
+    <h1>Administration du site</h1>
+    <p>Réservé aux responsables de l'association. Connectez-vous avec votre clé d'accès GitHub pour modifier et publier le site.</p>
+    <form id="login-form" novalidate>
+      <label for="token">Clé d'accès GitHub</label>
+      <input id="token" name="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
+      <label class="mwa-check"><input id="remember" type="checkbox" checked> Rester connecté sur cet appareil</label>
+      <button type="submit" class="btn btn-fill" id="login-btn">Se connecter</button>
+      <p class="mwa-error" id="login-error" role="alert" hidden></p>
+    </form>
+    <details class="mwa-help">
+      <summary>Comment obtenir ma clé d'accès ?</summary>
+      <ol>
+        <li>Connectez-vous sur <a href="https://github.com" target="_blank" rel="noopener">github.com</a> avec un compte qui a accès au dépôt du site.</li>
+        <li>Ouvrez <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
+        <li>Nom : « Site Mwasa Musiki ». Durée : 1 an.</li>
+        <li><b>Repository access</b> : « Only select repositories » puis choisissez <code id="repo-name">mwasa-musiki</code>.</li>
+        <li><b>Permissions → Repository permissions → Contents</b> : « Read and write ». Rien d'autre.</li>
+        <li>Cliquez sur « Generate token », copiez la clé et collez-la ici. Ne la donnez à personne.</li>
+      </ol>
+    </details>
+  </div>
+</section>
+
+<!-- Barre d'administration -->
+<div id="bar" class="mwa-bar" hidden>
+  <div class="mwa-bar-in">
+    <span class="mwa-title"><b>Mwasa Musiki</b> · Administration</span>
+    <span class="mwa-status" id="status">Aucune modification</span>
+    <div class="mwa-actions">
+      <button type="button" class="mwa-btn" id="help-btn">Aide</button>
+      <a class="mwa-btn" href="../" target="_blank" rel="noopener">Voir le site</a>
+      <button type="button" class="mwa-btn" id="discard-btn" disabled>Annuler les modifications</button>
+      <button type="button" class="mwa-btn mwa-primary" id="publish-btn" disabled>Publier</button>
+      <button type="button" class="mwa-btn mwa-ghost" id="logout-btn" title="Se déconnecter">Déconnexion</button>
+    </div>
+  </div>
+</div>
+
+<div id="tip" class="mwa-tip" hidden>
+  <b>Mode édition.</b> Cliquez sur un texte pour l'écrire, sur une photo pour la remplacer, sur un bouton ou un lien pour changer son adresse. Survolez une carte pour la déplacer, la dupliquer ou la supprimer. Rien n'est en ligne tant que vous n'avez pas cliqué sur <b>Publier</b>.
+  <button type="button" id="tip-close" aria-label="Fermer l'aide">×</button>
+</div>
+
+<div id="preview" class="mwa-preview" hidden></div>
+
+<!-- Fenêtre d'édition (photo, lien, date) -->
+<div id="pop-backdrop" class="mwa-backdrop" hidden></div>
+<form id="pop" class="mwa-pop" hidden novalidate>
+  <h2 id="pop-title">Modifier</h2>
+  <div id="pop-body"></div>
+  <div class="mwa-pop-actions">
+    <button type="button" class="mwa-btn" id="pop-cancel">Annuler</button>
+    <button type="submit" class="mwa-btn mwa-primary" id="pop-ok">Valider</button>
+  </div>
+</form>
+
+<div id="toast" class="mwa-toast" role="status" aria-live="polite" hidden></div>
+<input type="file" id="file" accept="image/*" hidden>
+
+<script src="../assets/render.js"></script>
+<script src="../assets/admin/admin.js"></script>
+</body>
+</html>
