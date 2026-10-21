@@ -97,3 +97,26 @@
 .mwa-toast.ok { background: #1f6f43; }
 .mwa-toast.err { background: #a1221a; }
 .mwa-busy { cursor: progress; }
+
+.mwa-linkbtn { background: none; border: 0; color: var(--accent-ink); font: 700 .88rem var(--f-body); text-decoration: underline; cursor: pointer; padding: .3rem 0; align-self: flex-start; }
+.mwa-login input[type=text] { font: inherit; padding: .8rem .9rem; border: 2px solid var(--line); border-radius: 8px; background: #fff; color: var(--nuit); }
+.mwa-login input[type=text]:focus { border-color: var(--orange); outline: none; }
+
+/* Cadrage */
+.mwa-focus { position: relative; border-radius: 8px; overflow: hidden; background: #2a201a; cursor: crosshair; }
+.mwa-focus img { display: block; width: 100%; max-height: 46vh; object-fit: contain; }
+.mwa-focus .dot { position: absolute; width: 26px; height: 26px; margin: -13px 0 0 -13px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.5), inset 0 0 0 2px rgba(0,0,0,.35); pointer-events: none; }
+.mwa-crops { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+.mwa-crops figure { margin: 0; display: flex; flex-direction: column; gap: .2rem; }
+.mwa-crops img { width: 100%; object-fit: cover; border-radius: 5px; background: var(--creme); }
+.mwa-crops figcaption { font-size: .72rem; color: var(--muted); text-align: center; }
+.mwa-row { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* Apparence */
+.mwa-colors { display: grid; grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr)); gap: .6rem; }
+.mwa-color { display: flex; align-items: center; gap: .55rem; border: 2px solid var(--line); border-radius: 8px; padding: .45rem .55rem; }
+.mwa-color input[type=color] { width: 2.4rem; height: 2.1rem; padding: 0; border: 0; background: none; cursor: pointer; flex: none; }
+.mwa-color span { font-size: .82rem; font-weight: 700; line-height: 1.2; }
+.mwa-field select { font: inherit; padding: .6rem .7rem; border: 2px solid var(--line); border-radius: 7px; background: #fff; color: var(--nuit); }
+.mwa-note { font-size: .82rem; color: var(--muted); background: var(--creme); border-radius: 6px; padding: .6rem .7rem; }
+.mwa-warn { font-size: .85rem; color: #7a3b00; background: #fff1d6; border-radius: 6px; padding: .6rem .7rem; }

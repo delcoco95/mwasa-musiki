@@ -13,6 +13,49 @@
   var MONTHS_SHORT = ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
   var DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
+  var FONTS = {
+    'archivo': { name: 'Archivo (étroite, par défaut)', family: '"Archivo","Arial Narrow",Arial,sans-serif', file: 'archivo-variable.woff2', face: 'Archivo', range: '100 900', stretch: true },
+    'oswald': { name: 'Oswald (étroite)', family: '"Oswald","Arial Narrow",sans-serif', file: 'oswald-variable.woff2', face: 'Oswald', range: '200 700' },
+    'montserrat': { name: 'Montserrat (moderne)', family: '"Montserrat",Arial,sans-serif', file: 'montserrat-variable.woff2', face: 'Montserrat', range: '100 900' },
+    'raleway': { name: 'Raleway (élégante)', family: '"Raleway",Arial,sans-serif', file: 'raleway-variable.woff2', face: 'Raleway', range: '100 900' },
+    'playfair-display': { name: 'Playfair Display (classique)', family: '"Playfair Display",Georgia,serif', file: 'playfair-display-variable.woff2', face: 'Playfair Display', range: '400 900' },
+    'lora': { name: 'Lora (serif douce)', family: '"Lora",Georgia,serif', file: 'lora-variable.woff2', face: 'Lora', range: '400 700' },
+    'merriweather': { name: 'Merriweather (serif lisible)', family: '"Merriweather",Georgia,serif', file: 'merriweather-variable.woff2', face: 'Merriweather', range: '300 900' },
+    'nunito-sans': { name: 'Nunito Sans (ronde, par défaut)', family: '"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif', file: 'nunito-sans-variable.woff2', face: 'Nunito Sans', range: '200 1000' },
+    'open-sans': { name: 'Open Sans (neutre)', family: '"Open Sans",system-ui,sans-serif', file: 'open-sans-variable.woff2', face: 'Open Sans', range: '300 800' },
+    'source-sans-3': { name: 'Source Sans 3 (sobre)', family: '"Source Sans 3",system-ui,sans-serif', file: 'source-sans-3-variable.woff2', face: 'Source Sans 3', range: '200 900' }
+  };
+  var THEME_DEFAULT = { creme: '#fef1e4', brun: '#6d2113', orange: '#f78138', sable: '#c2a791', nuit: '#1a130f', display: 'archivo', body: 'nunito-sans' };
+  var COLOR_KEYS = ['creme', 'brun', 'orange', 'sable', 'nuit'];
+
+  function themeCSS(theme, base) {
+    base = base || '';
+    var th = {}, k;
+    for (k in THEME_DEFAULT) th[k] = THEME_DEFAULT[k];
+    for (k in (theme || {})) if (theme[k]) th[k] = theme[k];
+    var hex = /^#[0-9a-f]{6}$/i, css = '', vars = [];
+    var changed = COLOR_KEYS.some(function (c) { return hex.test(th[c]) && th[c].toLowerCase() !== THEME_DEFAULT[c]; });
+    COLOR_KEYS.forEach(function (c) { if (hex.test(th[c])) vars.push('--' + c + ':' + th[c]); });
+    if (changed) {
+      vars.push('--muted:color-mix(in srgb,var(--nuit) 70%,var(--creme))');
+      vars.push('--line:color-mix(in srgb,var(--creme) 84%,var(--brun))');
+      vars.push('--surface:color-mix(in srgb,var(--creme) 50%,#fff)');
+      vars.push('--accent-ink:color-mix(in srgb,var(--orange) 70%,#000)');
+    }
+    var used = {};
+    ['display', 'body'].forEach(function (role) {
+      var f = FONTS[th[role]] || FONTS[THEME_DEFAULT[role]];
+      vars.push('--f-' + role + ':' + f.family);
+      used[f.file] = f;
+    });
+    Object.keys(used).forEach(function (file) {
+      var f = used[file];
+      if (f.face === 'Archivo' || f.face === 'Nunito Sans') return; // déjà déclarées dans site.css
+      css += '@font-face{font-family:"' + f.face + '";src:url("' + base + 'assets/fonts/' + f.file + '") format("woff2");font-weight:' + f.range + ';font-style:normal;font-display:swap}';
+    });
+    return css + ':root{' + vars.join(';') + '}';
+  }
+
   function esc(s) {
     return String(s == null ? '' : s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -57,6 +100,8 @@
     function im(path, o, extra) {
       o = o || {};
       var a = ' src="' + esc(img(o.src)) + '" alt="' + esc(o.alt) + '"' + (extra || '');
+      var fx = Number(o.focusX), fy = Number(o.focusY);
+      if (isFinite(fx) && isFinite(fy) && (o.focusX != null)) a += ' style="object-position:' + Math.max(0, Math.min(100, fx)) + '% ' + Math.max(0, Math.min(100, fy)) + '%"';
       if (E) a += ' data-img="' + path + '"';
       return '<img' + a + '>';
     }
@@ -79,6 +124,7 @@
 
     var d = data;
     var h = [];
+    if (!opts.noTheme) h.push('<style id="mw-theme">' + themeCSS(d.theme, base) + '</style>');
 
     /* En-tête */
     h.push('<header class="top"><div class="wrap">' +
@@ -169,19 +215,13 @@
     var news = (ac.items || []).map(function (x, i) {
       var p = 'actualite.items.' + i, dt = parseDate(x.date);
       var date = '<time datetime="' + esc(x.date) + '" class="when"' + (E ? ' data-event="' + p + '"' : '') + '>' + esc(longDate(x.date) || 'Ajouter une date') + '</time>';
-      if (i === 0) {
-        return '<article class="news"' + item('actualite.items', i) + '><div class="pic">' + im(p + '.image', x.image, ' width="1200" height="800" loading="lazy"') +
-          (dt ? '<div class="date"><b>' + dt.d + '</b><span>' + MONTHS[dt.m - 1] + '</span></div>' : '') + '</div>' +
-          '<div class="body">' + t(p + '.tag', x.tag, 'span', 'pill') + t(p + '.title', x.title, 'h3') + t(p + '.text', x.text, 'p') + date +
-          (x.link && (x.link.label || E) ? ln(p + '.link', x.link, 'btn btn-dark') : '') + '</div></article>';
-      }
-      return '<article class="news-card"' + item('actualite.items', i) + '>' + im(p + '.image', x.image, ' width="900" height="600" loading="lazy"') +
-        '<div class="body">' + date + t(p + '.title', x.title, 'h3') + t(p + '.text', x.text, 'p') +
-        (x.link && (x.link.label || E) ? ln(p + '.link', x.link, 'lnk') : '') + '</div></article>';
+      return '<article class="news' + (i ? ' news-sm' : '') + '"' + item('actualite.items', i) + '><div class="pic">' + im(p + '.image', x.image, ' width="1200" height="800" loading="lazy"') +
+        (dt ? '<div class="date"><b>' + dt.d + '</b><span>' + MONTHS[dt.m - 1] + '</span></div>' : '') + '</div>' +
+        '<div class="body">' + (x.tag || E ? t(p + '.tag', x.tag, 'span', 'pill') : '') + t(p + '.title', x.title, 'h3') + t(p + '.text', x.text, 'p') + date +
+        (x.link && (x.link.label || E) ? ln(p + '.link', x.link, 'btn btn-dark') : '') + '</div></article>';
     });
     h.push('<section class="block" id="actualite"><div class="wrap">' + head('actualite', ac) +
-      '<div class="news-list"' + list('actualite.items', 'news') + '>' + (news[0] || '') +
-      (news.length > 1 ? '<div class="news-more">' + news.slice(1).join('') + '</div>' : '') + '</div></div></section>');
+      '<div class="news-list"' + list('actualite.items', 'news') + '>' + news.join('') + '</div></div></section>');
 
     /* Adhésion */
     var ad = d.adhesion;
@@ -208,7 +248,8 @@
     var fo = d.footer;
     h.push('<footer><div class="wrap"><span class="brand"><img src="' + base + 'img/logo.svg" alt="Logo Mwasa Musiki" width="86" height="47"></span>' +
       '<span>© <span id="annee">' + new Date().getFullYear() + '</span> ' + t('footer.text', fo.text) + '</span>' +
-      '<a href="#accueil">Haut de page ↑</a>' + t('footer.credits', fo.credits, 'p', 'credits') + '</div></footer>');
+      '<a href="#accueil">Haut de page ↑</a>' + t('footer.credits', fo.credits, 'p', 'credits') +
+      '<a class="admin-link" href="' + base + 'admin/" rel="nofollow">Espace administration</a></div></footer>');
 
     return h.join('\n');
   }
@@ -225,10 +266,10 @@
       '<meta property="og:image" content="img/hero.webp">\n<meta property="og:locale" content="fr_FR">\n' +
       '<link rel="icon" type="image/svg+xml" href="img/logo.svg">\n' +
       '<link rel="preload" href="assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>\n' +
-      '<link rel="stylesheet" href="assets/site.css">\n</head>\n<body>\n' +
+      '<link rel="stylesheet" href="assets/site.css">\n<style id="mw-theme">' + themeCSS(data.theme, '') + '</style>\n</head>\n<body>\n' +
       '<!-- Page générée automatiquement depuis content/site.json par l\'administration. Modifiez le contenu sur /admin/. -->\n' +
-      render(data, {}) + '\n<script src="assets/site.js" defer></script>\n</body>\n</html>\n';
+      render(data, { noTheme: true }) + '\n<script src="assets/site.js" defer></script>\n</body>\n</html>\n';
   }
 
-  return { render: render, fullDocument: fullDocument, esc: esc, longDate: longDate, parseDate: parseDate };
+  return { render: render, fullDocument: fullDocument, themeCSS: themeCSS, FONTS: FONTS, THEME_DEFAULT: THEME_DEFAULT, esc: esc, longDate: longDate, parseDate: parseDate };
 });

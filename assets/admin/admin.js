@@ -103,11 +103,18 @@
   }
 
   /* ---------- Connexion ---------- */
-  function showLogin(msg) {
+  function showLogin(msg, mode) {
     $('login').hidden = false; $('bar').hidden = true; $('preview').hidden = true; $('tip').hidden = true;
     $('repo-name').textContent = CONFIG.owner + '/' + CONFIG.repo;
-    if (msg) { $('login-error').textContent = msg; $('login-error').hidden = false; }
-    setTimeout(function () { $('token').focus(); }, 50);
+    mode = mode || state.loginMode || (state.access ? 'pw' : 'token');
+    state.loginMode = mode;
+    $('pw-form').hidden = mode !== 'pw';
+    $('login-form').hidden = mode === 'pw';
+    $('to-pw').hidden = !state.access;
+    var errEl = mode === 'pw' ? $('pw-error') : $('login-error');
+    $('pw-error').hidden = true; $('login-error').hidden = true;
+    if (msg) { errEl.textContent = msg; errEl.hidden = false; }
+    setTimeout(function () { (mode === 'pw' ? $('pw-user') : $('token')).focus(); }, 50);
   }
   function friendly(err) {
     if (err.status === 401) return 'Clé refusée par GitHub. Vérifiez qu\'elle est complète et qu\'elle n\'a pas expiré.';
@@ -120,7 +127,8 @@
   }
   function login(token, remember) {
     state.token = token;
-    $('login-btn').disabled = true; $('login-btn').textContent = 'Connexion…';
+    var lb = state.loginMode === 'pw' ? $('pw-btn') : $('login-btn');
+    lb.disabled = true; lb.textContent = 'Connexion…';
     return gh('GET', repoPath()).then(function (repo) {
       if (repo.permissions && repo.permissions.push === false) {
         var e = new Error('Ce compte GitHub peut voir le dépôt mais pas le modifier. Demandez à être ajouté comme collaborateur.'); throw e;
@@ -133,10 +141,137 @@
       startEditor();
     }).catch(function (err) {
       state.token = null;
-      showLogin(friendly(err));
+      var msg = friendly(err);
+      if (state.loginMode === 'pw' && (err.status === 401 || err.status === 404)) msg = 'La clé GitHub enregistrée derrière ce mot de passe ne fonctionne plus (expirée ou supprimée). Connectez-vous avec une nouvelle clé GitHub, puis redéfinissez le mot de passe dans « Accès ».';
+      showLogin(msg);
     }).finally(function () {
-      $('login-btn').disabled = false; $('login-btn').textContent = 'Se connecter';
+      lb.disabled = false; lb.textContent = 'Se connecter';
     });
+  }
+
+  /* ---------- Accès par identifiant et mot de passe ----------
+   * La clé GitHub est chiffrée (AES-GCM) avec une clé dérivée de l'identifiant et du mot de passe
+   * (PBKDF2-SHA256, 600 000 tours). Seul le résultat chiffré est publié dans admin/access.json :
+   * le mot de passe n'est stocké nulle part. */
+  var ACCESS_PATH = 'admin/access.json';
+  var ITER = 600000;
+  function bytesToB64(u8) { var b = ''; for (var i = 0; i < u8.length; i++) b += String.fromCharCode(u8[i]); return btoa(b); }
+  function b64ToBytes(b64) { var b = atob(b64), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
+  function deriveKey(user, pass, salt, iter) {
+    var enc = new TextEncoder();
+    return crypto.subtle.importKey('raw', enc.encode(user.trim().toLowerCase() + '\n' + pass), 'PBKDF2', false, ['deriveKey']).then(function (base) {
+      return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+    });
+  }
+  function encryptToken(user, pass, token) {
+    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+    return deriveKey(user, pass, salt, ITER).then(function (key) {
+      return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(token));
+    }).then(function (ct) {
+      return { v: 1, kdf: 'PBKDF2-SHA256', iter: ITER, salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(ct)), updated: new Date().toISOString().slice(0, 10) };
+    });
+  }
+  function decryptToken(user, pass, acc) {
+    return deriveKey(user, pass, b64ToBytes(acc.salt), acc.iter || ITER).then(function (key) {
+      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(acc.iv) }, key, b64ToBytes(acc.data));
+    }).then(function (pt) { return new TextDecoder().decode(pt); });
+  }
+  function loadAccess() {
+    return fetch('access.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { state.access = j && j.data ? j : null; }).catch(function () { state.access = null; });
+  }
+  function loginWithPassword(user, pass, remember) {
+    if (!state.access) { showLogin('L\'accès par mot de passe n\'est pas encore configuré. Connectez-vous avec une clé GitHub.', 'token'); return; }
+    var b = $('pw-btn'); b.disabled = true; b.textContent = 'Vérification…';
+    decryptToken(user, pass, state.access).then(function (token) {
+      b.disabled = false; b.textContent = 'Se connecter';
+      login(token, remember);
+    }).catch(function () {
+      b.disabled = false; b.textContent = 'Se connecter';
+      showLogin('Identifiant ou mot de passe incorrect.', 'pw');
+    });
+  }
+  function editAccess() {
+    var has = !!state.access;
+    openPop('Accès par mot de passe',
+      '<p class="mwa-note">Les responsables pourront se connecter avec cet identifiant et ce mot de passe, sans clé GitHub. Le mot de passe sert à chiffrer votre clé : il n\'est enregistré nulle part, notez-le. ' +
+      (has ? 'Un accès existe déjà (mis à jour le ' + R.esc(state.access.updated || '?') + ') : l\'enregistrer à nouveau remplace l\'ancien.' : '') + '</p>' +
+      field('f-user', 'Identifiant', '', 'text') +
+      field('f-pass', 'Mot de passe', '', 'password', 'Au moins 12 caractères. Une phrase est plus sûre et facile à retenir, par exemple « Le-chœur-chante-à-Nice-2026 ».') +
+      field('f-pass2', 'Confirmer le mot de passe', '', 'password') +
+      '<p class="mwa-warn">Ce site est public : n\'importe qui peut récupérer la version chiffrée et essayer de deviner le mot de passe. Un mot de passe court ou courant se devine facilement. Ne réutilisez pas un mot de passe d\'un autre compte.</p>' +
+      (has ? '<button type="button" class="mwa-btn mwa-danger" id="f-del-access">Supprimer l\'accès par mot de passe</button>' : ''),
+      function () {
+        var u = val('f-user'), p1 = document.getElementById('f-pass').value, p2 = document.getElementById('f-pass2').value;
+        if (u.length < 3) { toast('Choisissez un identifiant d\'au moins 3 caractères.', 'err'); return false; }
+        if (p1.length < 12) { toast('Le mot de passe doit faire au moins 12 caractères.', 'err'); return false; }
+        if (p1 !== p2) { toast('Les deux mots de passe ne sont pas identiques.', 'err'); return false; }
+        toast('Chiffrement et enregistrement…', '', 15000);
+        encryptToken(u, p1, state.token).then(function (acc) {
+          return putFile(ACCESS_PATH, JSON.stringify(acc, null, 2) + '\n', 'Met à jour l\'accès administration').then(function () { state.access = acc; });
+        }).then(function () { toast('Accès enregistré. Il fonctionnera d\'ici 1 à 2 minutes.', 'ok', 7000); })
+          .catch(function (err) { toast('Enregistrement impossible : ' + friendly(err), 'err', 9000); });
+        return true;
+      }, 'Enregistrer l\'accès');
+    var del = document.getElementById('f-del-access');
+    if (del) del.addEventListener('click', function () {
+      closePop();
+      getSha(ACCESS_PATH).then(function (sha) {
+        if (!sha) return;
+        return gh('DELETE', repoPath() + '/contents/' + ACCESS_PATH, { message: 'Supprime l\'accès par mot de passe', sha: sha, branch: CONFIG.branch });
+      }).then(function () { state.access = null; toast('Accès par mot de passe supprimé.', 'ok'); })
+        .catch(function (err) { toast('Suppression impossible : ' + friendly(err), 'err', 9000); });
+    });
+  }
+  function getSha(path) {
+    return gh('GET', repoPath() + '/contents/' + path + '?ref=' + CONFIG.branch).then(function (f) { return f.sha; })
+      .catch(function (err) { if (err.status === 404) return null; throw err; });
+  }
+  function putFile(path, text, message) {
+    return getSha(path).then(function (sha) {
+      var body = { message: message, content: b64encodeUtf8(text), branch: CONFIG.branch };
+      if (sha) body.sha = sha;
+      return gh('PUT', repoPath() + '/contents/' + path, body);
+    });
+  }
+
+  /* ---------- Apparence (couleurs et polices) ---------- */
+  var COLOR_LABELS = [['creme', 'Fond de page'], ['brun', 'Couleur principale'], ['orange', 'Couleur d\'accent'], ['sable', 'Couleur secondaire'], ['nuit', 'Texte et pied de page']];
+  function applyTheme() {
+    var st = document.getElementById('mw-theme');
+    if (st) st.textContent = R.themeCSS(state.data.theme, '../');
+  }
+  function editTheme() {
+    var before = clone(state.data.theme || {});
+    var th = state.data.theme = Object.assign({}, R.THEME_DEFAULT, state.data.theme || {});
+    var opts = function (role) {
+      return Object.keys(R.FONTS).map(function (k) {
+        return '<option value="' + k + '"' + (th[role] === k ? ' selected' : '') + '>' + R.esc(R.FONTS[k].name) + '</option>';
+      }).join('');
+    };
+    openPop('Apparence du site',
+      '<div class="mwa-colors">' + COLOR_LABELS.map(function (c) {
+        return '<label class="mwa-color"><input type="color" id="c-' + c[0] + '" value="' + R.esc(th[c[0]]) + '"><span>' + c[1] + '</span></label>';
+      }).join('') + '</div>' +
+      '<div class="mwa-field"><label for="f-display">Police des titres</label><select id="f-display">' + opts('display') + '</select></div>' +
+      '<div class="mwa-field"><label for="f-body">Police du texte</label><select id="f-body">' + opts('body') + '</select></div>' +
+      '<p class="mwa-note">Les changements s\'affichent tout de suite dans la page derrière. Le logo garde ses couleurs d\'origine. Pensez à un bon contraste entre le texte et le fond.</p>' +
+      '<button type="button" class="mwa-btn" id="f-reset-theme">Revenir aux couleurs et polices d\'origine</button>',
+      function () { markChanged(); return true; }, 'Appliquer');
+    var live = function () {
+      COLOR_LABELS.forEach(function (c) { th[c[0]] = document.getElementById('c-' + c[0]).value; });
+      th.display = document.getElementById('f-display').value;
+      th.body = document.getElementById('f-body').value;
+      applyTheme();
+    };
+    $('pop-body').querySelectorAll('input, select').forEach(function (el) { el.addEventListener('input', live); el.addEventListener('change', live); });
+    document.getElementById('f-reset-theme').addEventListener('click', function () {
+      Object.assign(th, R.THEME_DEFAULT);
+      COLOR_LABELS.forEach(function (c) { document.getElementById('c-' + c[0]).value = th[c[0]]; });
+      document.getElementById('f-display').value = th.display; document.getElementById('f-body').value = th.body;
+      applyTheme();
+    });
+    state._themeBefore = before;
   }
   /* ---------- Brouillon local ---------- */
   function saveDraft() {
@@ -338,20 +473,51 @@
   }
 
   var pendingImagePath = null;
+  function imgURL(src) { var r = resolveImg(src); return /^(data:|blob:|https?:)/.test(r) ? r : '../' + r; }
   function editImage(path) {
     var o = getPath(state.data, path) || { src: '', alt: '' };
+    var fx = o.focusX != null ? +o.focusX : 50, fy = o.focusY != null ? +o.focusY : 50;
+    var shown = document.querySelector('[data-img="' + path + '"]');
+    var ratio = shown && shown.clientWidth && shown.clientHeight ? (shown.clientWidth / shown.clientHeight) : 1.5;
+    var u = R.esc(imgURL(o.src));
     openPop('Photo',
-      '<img class="mwa-thumb" id="f-thumb" alt="" src="' + R.esc(/^(data:|https?:)/.test(resolveImg(o.src)) ? resolveImg(o.src) : '../' + o.src) + '">' +
-      '<button type="button" class="mwa-btn mwa-primary" id="f-replace">Remplacer la photo…</button>' +
+      '<div class="mwa-field"><label>Cadrage : cliquez sur la partie à garder visible</label>' +
+      '<div class="mwa-focus" id="f-focus"><img id="f-thumb" alt="" src="' + u + '"><span class="dot" id="f-dot"></span></div>' +
+      '<small>La photo est rognée automatiquement pour remplir son cadre. Le point blanc indique ce qui reste toujours visible.</small></div>' +
+      '<div class="mwa-crops"><figure><img id="f-c1" src="' + u + '" style="aspect-ratio:' + ratio.toFixed(3) + '"><figcaption>Sur la page</figcaption></figure>' +
+      '<figure><img id="f-c2" src="' + u + '" style="aspect-ratio:1"><figcaption>Carré</figcaption></figure>' +
+      '<figure><img id="f-c3" src="' + u + '" style="aspect-ratio:16/9"><figcaption>Sur téléphone</figcaption></figure></div>' +
+      '<div class="mwa-row"><button type="button" class="mwa-btn mwa-primary" id="f-replace">Remplacer la photo…</button>' +
+      '<button type="button" class="mwa-btn" id="f-center">Recentrer</button></div>' +
       field('f-alt', 'Description de la photo', o.alt, 'text', 'Décrit l\'image pour les personnes malvoyantes et Google. Exemple : « Le chœur en concert à Nice ».'),
       function () {
         var cur = getPath(state.data, path);
         cur.alt = val('f-alt');
         if (state._newImage) { cur.src = state._newImage; state._newImage = null; }
+        if (Math.round(fx) === 50 && Math.round(fy) === 50) { delete cur.focusX; delete cur.focusY; }
+        else { cur.focusX = Math.round(fx); cur.focusY = Math.round(fy); }
         markChanged(); renderPreview(); return true;
       });
     state._newImage = null;
     pendingImagePath = path;
+    var thumb = document.getElementById('f-thumb'), dot = document.getElementById('f-dot');
+    var paint = function () {
+      // le point est placé sur l'image réellement affichée (object-fit: contain)
+      var bw = thumb.clientWidth, bh = thumb.clientHeight, nw = thumb.naturalWidth || 1, nh = thumb.naturalHeight || 1;
+      var s = Math.min(bw / nw, bh / nh), w = nw * s, h = nh * s, ox = (bw - w) / 2, oy = (bh - h) / 2;
+      dot.style.left = (ox + w * fx / 100) + 'px'; dot.style.top = (oy + h * fy / 100) + 'px';
+      ['f-c1', 'f-c2', 'f-c3'].forEach(function (id) { var c = document.getElementById(id); c.style.objectPosition = fx + '% ' + fy + '%'; if (thumb.src !== c.src) c.src = thumb.src; });
+    };
+    thumb.addEventListener('load', paint); if (thumb.complete) paint();
+    document.getElementById('f-focus').addEventListener('click', function (e) {
+      var r = thumb.getBoundingClientRect(), nw = thumb.naturalWidth || 1, nh = thumb.naturalHeight || 1;
+      var s = Math.min(r.width / nw, r.height / nh), w = nw * s, h = nh * s, ox = (r.width - w) / 2, oy = (r.height - h) / 2;
+      fx = Math.max(0, Math.min(100, (e.clientX - r.left - ox) / w * 100));
+      fy = Math.max(0, Math.min(100, (e.clientY - r.top - oy) / h * 100));
+      paint();
+    });
+    document.getElementById('f-center').addEventListener('click', function () { fx = 50; fy = 50; paint(); });
+    state._resetFocus = function () { fx = 50; fy = 50; };
     $('f-replace').addEventListener('click', function () { $('file').value = ''; $('file').click(); });
   }
 
@@ -380,7 +546,7 @@
       var p = 'img/uploads/' + slug(f.name) + '-' + Date.now().toString(36) + '.webp';
       state.pending[p] = { b64: dataUrl.split(',')[1], url: dataUrl };
       state._newImage = p;
-      var th = document.getElementById('f-thumb'); if (th) th.src = dataUrl;
+      var th = document.getElementById('f-thumb'); if (th) { if (state._resetFocus) state._resetFocus(); th.src = dataUrl; }
       toast('Photo prête. Cliquez sur « Valider ».', 'ok');
     }).catch(function (err) { toast('Impossible de lire cette image : ' + err.message, 'err', 6000); });
   }
@@ -476,6 +642,17 @@
       $('login-error').hidden = true;
       login(tk, $('remember').checked);
     });
+    $('pw-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var u = $('pw-user').value, pw = $('pw-pass').value;
+      if (!u.trim() || !pw) { showLogin('Saisissez l\'identifiant et le mot de passe.', 'pw'); return; }
+      $('pw-error').hidden = true;
+      loginWithPassword(u, pw, $('pw-remember').checked);
+    });
+    $('to-token').addEventListener('click', function () { showLogin('', 'token'); });
+    $('to-pw').addEventListener('click', function () { showLogin('', 'pw'); });
+    $('theme-btn').addEventListener('click', editTheme);
+    $('access-btn').addEventListener('click', editAccess);
     $('preview').addEventListener('click', onPreviewClick);
     $('publish-btn').addEventListener('click', publish);
     $('discard-btn').addEventListener('click', discard);
@@ -491,6 +668,9 @@
         '<li><b>Bouton ou lien</b> : cliquez dessus pour changer son texte et son adresse.</li>' +
         '<li><b>Date d\'un événement ou d\'une actualité</b> : cliquez sur la date.</li>' +
         '<li><b>Cartes et listes</b> : survolez-les pour monter, descendre, dupliquer ou supprimer. Les boutons « + Ajouter » créent un nouvel élément.</li>' +
+        '<li><b>Cadrage d\'une photo</b> : cliquez sur la photo puis sur la partie à garder visible.</li>' +
+        '<li><b>Apparence</b> : changez les couleurs et les polices de tout le site.</li>' +
+        '<li><b>Accès</b> : définissez l\'identifiant et le mot de passe des responsables.</li>' +
         '<li><b>Agenda</b> : les événements passés sont masqués automatiquement sur le site.</li>' +
         '<li><b>Publier</b> envoie tout en ligne. Le site est à jour 1 à 2 minutes après.</li></ul>', function () { return true; }, 'Compris');
       $('pop-cancel').hidden = true;
@@ -498,21 +678,29 @@
     $('tip-close').addEventListener('click', function () { $('tip').hidden = true; sset('local', 'mwasa_tip_seen', '1'); });
     $('pop').addEventListener('submit', function (e) {
       e.preventDefault();
-      if (!popSubmit || popSubmit() !== false) { closePop(); $('pop-cancel').hidden = false; }
+      if (!popSubmit || popSubmit() !== false) { state._themeBefore = undefined; closePop(); $('pop-cancel').hidden = false; }
     });
-    $('pop-cancel').addEventListener('click', function () { state._newImage = null; closePop(); });
-    $('pop-backdrop').addEventListener('click', function () { state._newImage = null; closePop(); $('pop-cancel').hidden = false; });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('pop').hidden) { state._newImage = null; closePop(); $('pop-cancel').hidden = false; } });
+    var cancelPop = function () {
+      state._newImage = null;
+      if (state._themeBefore !== undefined && $('pop-title').textContent === 'Apparence du site') { state.data.theme = state._themeBefore; applyTheme(); }
+      state._themeBefore = undefined;
+      closePop(); $('pop-cancel').hidden = false;
+    };
+    $('pop-cancel').addEventListener('click', cancelPop);
+    $('pop-backdrop').addEventListener('click', cancelPop);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('pop').hidden) cancelPop(); });
     $('file').addEventListener('change', onFile);
     window.addEventListener('beforeunload', function (e) { if (state.changes) { saveDraft(); } });
 
     var tk = sget(TOKEN_KEY);
-    if (tk) {
-      state.token = tk;
-      gh('GET', repoPath()).then(loadContent).then(startEditor).catch(function (err) {
-        sdel(TOKEN_KEY); state.token = null; showLogin(friendly(err));
-      });
-    } else showLogin();
+    loadAccess().then(function () {
+      if (tk) {
+        state.token = tk;
+        gh('GET', repoPath()).then(loadContent).then(startEditor).catch(function (err) {
+          sdel(TOKEN_KEY); state.token = null; showLogin(friendly(err));
+        });
+      } else showLogin();
+    });
   }
 
   init();

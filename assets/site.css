@@ -224,3 +224,20 @@ footer .brand img{width:86px;height:auto;display:block}
 .card dl{display:flex;flex-direction:column;gap:.6rem}
 .card .row{display:grid;grid-template-columns:6.2rem minmax(0,1fr);gap:1rem}
 @media (max-width:420px){.card .row{grid-template-columns:1fr;gap:.1rem}.card dd{margin-bottom:.4rem}}
+
+/* Actualités : toutes au même format (photo à gauche, texte à droite) */
+.news-list{gap:1.6rem}
+.news-sm{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);border-width:1px;border-color:var(--line)}
+.news-sm .pic{min-height:220px}
+.news-sm h3{font-size:clamp(1.4rem,1.1rem + 1.2vw,2rem)}
+.news-sm .date b{font-size:2.1rem}
+@media (max-width:760px){.news-sm{grid-template-columns:1fr}.news-sm .pic{min-height:0;aspect-ratio:16/10}}
+
+/* Lien discret vers l'administration */
+footer .admin-link{font-size:.75rem;color:inherit;opacity:.45;text-decoration:none;margin-left:auto}
+footer .admin-link:hover,footer .admin-link:focus-visible{opacity:1;text-decoration:underline}
+footer .credits{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;align-items:center}
+
+/* Survol des boutons, quelle que soit la couleur choisie */
+.btn-fill:hover{background:var(--orange);filter:brightness(1.08)}
+.btn-fill{color:var(--nuit)}

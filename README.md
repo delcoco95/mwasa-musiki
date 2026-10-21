@@ -6,8 +6,8 @@ Le site est hébergé gratuitement par GitHub Pages et se modifie depuis une pag
 
 ## Modifier le site (responsables de l'association)
 
-1. Ouvrez l'adresse du site suivie de **`/admin/`** (par exemple `https://votre-domaine.fr/admin/`).
-2. Connectez-vous avec votre **clé d'accès GitHub** (voir plus bas).
+1. Cliquez sur **« Espace administration »** tout en bas de la page (ou ajoutez `/admin/` à l'adresse du site).
+2. Connectez-vous avec l'**identifiant et le mot de passe** de l'association, ou avec votre **clé d'accès GitHub** (voir plus bas).
 3. Cliquez directement sur la page :
    - un **texte** pour le réécrire ;
    - une **photo** pour la remplacer (elle est réduite automatiquement) ;
@@ -15,9 +15,15 @@ Le site est hébergé gratuitement par GitHub Pages et se modifie depuis une pag
    - la **date** d'un événement ou d'une actualité pour la changer ;
    - survolez une **carte** pour la monter, la descendre, la dupliquer ou la supprimer ;
    - les boutons **« + Ajouter »** créent un atelier, un projet, un événement, une actualité…
+   - **Apparence** : couleurs et polices de tout le site ;
+   - cliquez sur une photo puis sur la partie à garder visible pour la **cadrer**.
 4. Cliquez sur **Publier**. Le site est à jour 1 à 2 minutes plus tard.
 
 Tant que vous n'avez pas publié, rien n'est en ligne. Vos modifications sont gardées sur votre appareil si vous fermez la page. Dans l'agenda, les événements passés sont masqués automatiquement sur le site.
+
+### Identifiant et mot de passe
+
+Une fois connecté avec une clé GitHub, le bouton **Accès** permet de définir l'identifiant et le mot de passe que les autres responsables utiliseront. Le mot de passe chiffre la clé GitHub (PBKDF2 + AES-GCM) ; il n'est enregistré nulle part. Choisissez un mot de passe long, car la version chiffrée est publique. Si la clé GitHub expire, reconnectez-vous avec une nouvelle clé et redéfinissez l'accès.
 
 ### Obtenir une clé d'accès
 
@@ -37,7 +43,7 @@ La clé ne permet de modifier que ce site. Ne la partagez pas. Si elle est perdu
 - `index.html` : la page publiée, **générée automatiquement** à chaque publication (ne pas la modifier à la main)
 - `assets/render.js` : fabrique la page à partir du contenu (utilisé par l'administration)
 - `assets/site.css`, `assets/site.js`, `assets/fonts/` : apparence, menu mobile, polices hébergées sur le site
-- `admin/` et `assets/admin/` : l'interface d'administration
+- `admin/` et `assets/admin/` : l'interface d'administration (`admin/access.json` contient la clé GitHub chiffrée pour la connexion par mot de passe)
 - `img/` : photos ; `img/uploads/` reçoit les photos ajoutées depuis l'administration
 - `build.js` : régénère `index.html` en local (`node build.js`) après une modification manuelle de `site.json`
 

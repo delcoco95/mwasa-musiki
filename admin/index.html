@@ -16,13 +16,24 @@
   <div class="mwa-login-card">
     <img src="../img/logo.svg" alt="Mwasa Musiki" width="150" height="82">
     <h1>Administration du site</h1>
-    <p>Réservé aux responsables de l'association. Connectez-vous avec votre clé d'accès GitHub pour modifier et publier le site.</p>
+    <p id="login-intro">Réservé aux responsables de l'association. Connectez-vous pour modifier et publier le site.</p>
+    <form id="pw-form" novalidate hidden>
+      <label for="pw-user">Identifiant</label>
+      <input id="pw-user" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      <label for="pw-pass">Mot de passe</label>
+      <input id="pw-pass" name="password" type="password" autocomplete="current-password" required>
+      <label class="mwa-check"><input id="pw-remember" type="checkbox" checked> Rester connecté sur cet appareil</label>
+      <button type="submit" class="btn btn-fill" id="pw-btn">Se connecter</button>
+      <p class="mwa-error" id="pw-error" role="alert" hidden></p>
+      <button type="button" class="mwa-linkbtn" id="to-token">Se connecter avec une clé GitHub</button>
+    </form>
     <form id="login-form" novalidate>
       <label for="token">Clé d'accès GitHub</label>
       <input id="token" name="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
       <label class="mwa-check"><input id="remember" type="checkbox" checked> Rester connecté sur cet appareil</label>
       <button type="submit" class="btn btn-fill" id="login-btn">Se connecter</button>
       <p class="mwa-error" id="login-error" role="alert" hidden></p>
+      <button type="button" class="mwa-linkbtn" id="to-pw" hidden>Se connecter avec identifiant et mot de passe</button>
     </form>
     <details class="mwa-help">
       <summary>Comment obtenir ma clé d'accès ?</summary>
@@ -45,6 +56,8 @@
     <span class="mwa-status" id="status">Aucune modification</span>
     <div class="mwa-actions">
       <button type="button" class="mwa-btn" id="help-btn">Aide</button>
+      <button type="button" class="mwa-btn" id="theme-btn">Apparence</button>
+      <button type="button" class="mwa-btn" id="access-btn">Accès</button>
       <a class="mwa-btn" href="../" target="_blank" rel="noopener">Voir le site</a>
       <button type="button" class="mwa-btn" id="discard-btn" disabled>Annuler les modifications</button>
       <button type="button" class="mwa-btn mwa-primary" id="publish-btn" disabled>Publier</button>
