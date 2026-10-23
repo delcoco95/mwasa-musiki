@@ -120,3 +120,5 @@
 .mwa-field select { font: inherit; padding: .6rem .7rem; border: 2px solid var(--line); border-radius: 7px; background: #fff; color: var(--nuit); }
 .mwa-note { font-size: .82rem; color: var(--muted); background: var(--creme); border-radius: 6px; padding: .6rem .7rem; }
 .mwa-warn { font-size: .85rem; color: #7a3b00; background: #fff1d6; border-radius: 6px; padding: .6rem .7rem; }
+.mwa-small { font-size: .85rem; margin-top: -.4rem; }
+.mwa-small a { color: var(--accent-ink); }

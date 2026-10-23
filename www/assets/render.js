@@ -133,7 +133,7 @@
       '<nav aria-label="Navigation principale"><ul class="menu" id="menu">' +
       '<li><a href="#association">L\'association</a></li>' +
       '<li><a href="#ateliers">Ateliers</a></li>' +
-      '<li><a href="#projets">Projets</a></li>' +
+      '<li><a href="#horaires">Horaires</a></li>' +
       '<li><a href="#agenda">Agenda</a></li>' +
       '<li><a href="#actualite">Actualité</a></li>' +
       '<li><a href="#contact">Contact</a></li>' +
@@ -179,6 +179,18 @@
         return '<article class="at"' + item('ateliers.items', i) + '>' + im(p + '.image', x.image, ' width="900" height="600" loading="lazy"') +
           '<div class="body">' + t(p + '.tag', x.tag, 'span', 'tag') + t(p + '.title', x.title, 'h3') + t(p + '.text', x.text, 'p') + '</div></article>';
       }).join('') + '</div></div></section>');
+
+    /* Horaires */
+    var ho = d.horaires;
+    if (ho) {
+      h.push('<section class="block horaires" id="horaires"><div class="wrap">' + head('horaires', ho) +
+        '<div class="slots"' + list('horaires.items', 'slot') + '>' + (ho.items || []).map(function (x, i) {
+          var p = 'horaires.items.' + i;
+          return '<div class="slot"' + item('horaires.items', i) + '>' + t(p + '.title', x.title, 'h3') + t(p + '.when', x.when, 'p', 'when') + '</div>';
+        }).join('') + '</div>' +
+        '<p class="place">' + t('horaires.place', ho.place) + (ho.link && (ho.link.label || E) ? ' ' + ln('horaires.link', ho.link, 'lnk') : '') + '</p>' +
+        '</div></section>');
+    }
 
     /* Projets */
     var pr = d.projets;
@@ -248,7 +260,7 @@
     var fo = d.footer;
     h.push('<footer><div class="wrap"><span class="brand"><img src="' + base + 'img/logo.svg" alt="Logo Mwasa Musiki" width="86" height="47"></span>' +
       '<span>© <span id="annee">' + new Date().getFullYear() + '</span> ' + t('footer.text', fo.text) + '</span>' +
-      '<a href="#accueil">Haut de page ↑</a>' + t('footer.credits', fo.credits, 'p', 'credits') +
+      '<a href="#accueil">Haut de page ↑</a>' + (fo.credits ? t('footer.credits', fo.credits, 'p', 'credits') : '') +
       '<a class="admin-link" href="' + base + 'admin/" rel="nofollow">Espace administration</a></div></footer>');
 
     return h.join('\n');
@@ -263,7 +275,7 @@
       '<meta name="description" content="' + esc(m.description) + '">\n' +
       '<meta property="og:title" content="' + esc(m.title) + '">\n' +
       '<meta property="og:description" content="' + esc(m.description) + '">\n' +
-      '<meta property="og:image" content="img/hero.webp">\n<meta property="og:locale" content="fr_FR">\n' +
+      '<meta property="og:image" content="' + esc((data.hero && data.hero.image && data.hero.image.src) || 'img/logo.png') + '">\n<meta property="og:locale" content="fr_FR">\n' +
       '<link rel="icon" type="image/svg+xml" href="img/logo.svg">\n' +
       '<link rel="preload" href="assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>\n' +
       '<link rel="stylesheet" href="assets/site.css">\n<style id="mw-theme">' + themeCSS(data.theme, '') + '</style>\n</head>\n<body>\n' +

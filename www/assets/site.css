@@ -241,3 +241,12 @@ footer .credits{display:flex;flex-wrap:wrap;gap:.5rem 1.5rem;align-items:center}
 /* Survol des boutons, quelle que soit la couleur choisie */
 .btn-fill:hover{background:var(--orange);filter:brightness(1.08)}
 .btn-fill{color:var(--nuit)}
+
+/* Horaires */
+.horaires{padding-top:0}
+.slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));gap:1rem;border-top:2px solid var(--nuit);padding-top:1.4rem}
+.slot{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--orange);border-radius:var(--radius);padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.4rem;min-width:0}
+.slot h3{font-size:1.15rem;font-weight:800;font-stretch:85%;text-transform:uppercase}
+.slot .when{font-weight:700;color:var(--brun);font-variant-numeric:tabular-nums}
+.place{margin-top:1.3rem;color:var(--muted);display:flex;flex-wrap:wrap;gap:.4rem 1rem;align-items:baseline}
+.place::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--orange);flex:none;align-self:center}

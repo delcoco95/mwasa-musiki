@@ -1,0 +1,17 @@
+# Identifiants de l'administration : ne jamais publier
+.env
+.env.*
+!.env.example
+
+# Documents privés de l'association (factures, archives photos…)
+DOCS MWASA Musiki/
+DOCS*/
+
+# Données écrites par le serveur
+mwasa-data/
+www/admin/data/
+
+# Divers
+node_modules/
+.DS_Store
+Thumbs.db

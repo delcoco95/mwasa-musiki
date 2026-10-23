@@ -17,7 +17,8 @@
     <img src="../img/logo.svg" alt="Mwasa Musiki" width="150" height="82">
     <h1>Administration du site</h1>
     <p id="login-intro">Réservé aux responsables de l'association. Connectez-vous pour modifier et publier le site.</p>
-    <form id="pw-form" novalidate hidden>
+    <p class="mwa-small"><a href="../">← Retour au site</a></p>
+    <form id="pw-form" novalidate>
       <label for="pw-user">Identifiant</label>
       <input id="pw-user" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
       <label for="pw-pass">Mot de passe</label>
@@ -25,27 +26,7 @@
       <label class="mwa-check"><input id="pw-remember" type="checkbox" checked> Rester connecté sur cet appareil</label>
       <button type="submit" class="btn btn-fill" id="pw-btn">Se connecter</button>
       <p class="mwa-error" id="pw-error" role="alert" hidden></p>
-      <button type="button" class="mwa-linkbtn" id="to-token">Se connecter avec une clé GitHub</button>
     </form>
-    <form id="login-form" novalidate>
-      <label for="token">Clé d'accès GitHub</label>
-      <input id="token" name="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" required>
-      <label class="mwa-check"><input id="remember" type="checkbox" checked> Rester connecté sur cet appareil</label>
-      <button type="submit" class="btn btn-fill" id="login-btn">Se connecter</button>
-      <p class="mwa-error" id="login-error" role="alert" hidden></p>
-      <button type="button" class="mwa-linkbtn" id="to-pw" hidden>Se connecter avec identifiant et mot de passe</button>
-    </form>
-    <details class="mwa-help">
-      <summary>Comment obtenir ma clé d'accès ?</summary>
-      <ol>
-        <li>Connectez-vous sur <a href="https://github.com" target="_blank" rel="noopener">github.com</a> avec un compte qui a accès au dépôt du site.</li>
-        <li>Ouvrez <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
-        <li>Nom : « Site Mwasa Musiki ». Durée : 1 an.</li>
-        <li><b>Repository access</b> : « Only select repositories » puis choisissez <code id="repo-name">mwasa-musiki</code>.</li>
-        <li><b>Permissions → Repository permissions → Contents</b> : « Read and write ». Rien d'autre.</li>
-        <li>Cliquez sur « Generate token », copiez la clé et collez-la ici. Ne la donnez à personne.</li>
-      </ol>
-    </details>
   </div>
 </section>
 
@@ -57,7 +38,6 @@
     <div class="mwa-actions">
       <button type="button" class="mwa-btn" id="help-btn">Aide</button>
       <button type="button" class="mwa-btn" id="theme-btn">Apparence</button>
-      <button type="button" class="mwa-btn" id="access-btn">Accès</button>
       <a class="mwa-btn" href="../" target="_blank" rel="noopener">Voir le site</a>
       <button type="button" class="mwa-btn" id="discard-btn" disabled>Annuler les modifications</button>
       <button type="button" class="mwa-btn mwa-primary" id="publish-btn" disabled>Publier</button>

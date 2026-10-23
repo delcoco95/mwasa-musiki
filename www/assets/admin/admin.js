@@ -1,26 +1,20 @@
 /*
  * Mwasa Musiki : administration du site.
- * Le contenu vit dans content/site.json sur GitHub. « Publier » envoie en un seul commit :
- * le contenu, les nouvelles photos et la page index.html régénérée. GitHub Pages met le site à jour.
+ * Connexion par identifiant et mot de passe (vérifiés par le serveur, fichier .env).
+ * « Publier » envoie les nouvelles photos puis le contenu et la page index.html régénérée à admin/api.php,
+ * qui les enregistre sur l'hébergement.
  */
 (function () {
   'use strict';
 
-  var CONFIG = {
-    owner: 'delcoco95',
-    repo: 'mwasa-musiki',
-    branch: 'main',
-    contentPath: 'content/site.json',
-    api: 'https://api.github.com'
-  };
-  var TOKEN_KEY = 'mwasa_admin_token';
+  var API = 'api.php';
   var DRAFT_KEY = 'mwasa_admin_draft';
 
   var R = window.MwasaRender;
   var $ = function (id) { return document.getElementById(id); };
 
   var state = {
-    token: null,
+    csrf: null,
     data: null,         // contenu en cours d'édition
     saved: null,        // dernière version publiée (texte JSON)
     contentSha: null,   // sha du fichier site.json chargé
@@ -68,171 +62,64 @@
     toastTimer = setTimeout(function () { t.hidden = true; }, ms || 4000);
   }
 
-  /* ---------- API GitHub ---------- */
-  function gh(method, path, body) {
-    return fetch(CONFIG.api + path, {
-      method: method,
-      headers: {
-        'Accept': 'application/vnd.github+json',
-        'Authorization': 'Bearer ' + state.token,
-        'X-GitHub-Api-Version': '2022-11-28',
-        'Content-Type': 'application/json'
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      cache: 'no-store'
-    }).then(function (r) {
+  /* ---------- API du serveur ---------- */
+  function api(action, body) {
+    var opts = { method: body ? 'POST' : 'GET', credentials: 'same-origin', cache: 'no-store', headers: { 'Accept': 'application/json' } };
+    if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    if (state.csrf) opts.headers['X-CSRF-Token'] = state.csrf;
+    return fetch(API + '?action=' + action, opts).then(function (r) {
       return r.text().then(function (txt) {
         var j = null; try { j = txt ? JSON.parse(txt) : null; } catch (e) {}
-        if (!r.ok) {
-          var err = new Error((j && j.message) || ('Erreur ' + r.status));
-          err.status = r.status; throw err;
+        if (!j) {
+          var e1 = new Error(r.status === 404 ? 'Le programme d\'administration (admin/api.php) est introuvable sur le serveur.' :
+            'Le serveur a répondu de façon inattendue. Vérifiez que l\'hébergement exécute bien PHP.');
+          e1.status = r.status; throw e1;
         }
+        if (!r.ok || j.ok === false) { var e2 = new Error(j.error || ('Erreur ' + r.status)); e2.status = r.status; throw e2; }
         return j;
       });
     });
   }
-  var repoPath = function () { return '/repos/' + CONFIG.owner + '/' + CONFIG.repo; };
-
   function loadContent() {
-    return gh('GET', repoPath() + '/contents/' + CONFIG.contentPath + '?ref=' + CONFIG.branch).then(function (f) {
-      state.contentSha = f.sha;
-      var txt = b64decodeUtf8(f.content);
-      state.saved = txt;
-      state.data = JSON.parse(txt);
+    return api('content').then(function (j) {
+      state.contentSha = j.version;
+      state.saved = j.content;
+      state.data = JSON.parse(j.content);
     });
   }
-
-  /* ---------- Connexion ---------- */
-  function showLogin(msg, mode) {
-    $('login').hidden = false; $('bar').hidden = true; $('preview').hidden = true; $('tip').hidden = true;
-    $('repo-name').textContent = CONFIG.owner + '/' + CONFIG.repo;
-    mode = mode || state.loginMode || (state.access ? 'pw' : 'token');
-    state.loginMode = mode;
-    $('pw-form').hidden = mode !== 'pw';
-    $('login-form').hidden = mode === 'pw';
-    $('to-pw').hidden = !state.access;
-    var errEl = mode === 'pw' ? $('pw-error') : $('login-error');
-    $('pw-error').hidden = true; $('login-error').hidden = true;
-    if (msg) { errEl.textContent = msg; errEl.hidden = false; }
-    setTimeout(function () { (mode === 'pw' ? $('pw-user') : $('token')).focus(); }, 50);
-  }
   function friendly(err) {
-    if (err.status === 401) return 'Clé refusée par GitHub. Vérifiez qu\'elle est complète et qu\'elle n\'a pas expiré.';
-    if (err.status === 403) return 'Cette clé n\'a pas les droits nécessaires (Contents : Read and write sur ' + CONFIG.repo + ').';
-    if (err.status === 404) return 'Le dépôt ' + CONFIG.owner + '/' + CONFIG.repo + ' est introuvable avec cette clé. Vérifiez que la clé donne accès à ce dépôt.';
-    if (err.status === 409) return 'Quelqu\'un a publié en même temps. Rechargez la page puis recommencez.';
-    if (err.status === 422) return 'GitHub a refusé l\'envoi : ' + err.message;
     if (err instanceof TypeError) return 'Connexion impossible. Vérifiez votre accès Internet.';
     return err.message || 'Erreur inattendue.';
   }
-  function login(token, remember) {
-    state.token = token;
-    var lb = state.loginMode === 'pw' ? $('pw-btn') : $('login-btn');
-    lb.disabled = true; lb.textContent = 'Connexion…';
-    return gh('GET', repoPath()).then(function (repo) {
-      if (repo.permissions && repo.permissions.push === false) {
-        var e = new Error('Ce compte GitHub peut voir le dépôt mais pas le modifier. Demandez à être ajouté comme collaborateur.'); throw e;
-      }
+
+  /* ---------- Connexion ---------- */
+  function showLogin(msg) {
+    $('login').hidden = false; $('bar').hidden = true; $('preview').hidden = true; $('tip').hidden = true;
+    $('pw-error').hidden = !msg;
+    if (msg) $('pw-error').textContent = msg;
+    setTimeout(function () { $('pw-user').focus(); }, 50);
+  }
+  function login(user, pass, remember) {
+    var b = $('pw-btn'); b.disabled = true; b.textContent = 'Connexion…';
+    api('login', { user: user, pass: pass, remember: remember }).then(function (j) {
+      state.csrf = j.csrf;
+      $('pw-pass').value = '';
       return loadContent();
     }).then(function () {
-      sdel(TOKEN_KEY);
-      sset(remember ? 'local' : 'session', TOKEN_KEY, token);
       $('login').hidden = true;
       startEditor();
     }).catch(function (err) {
-      state.token = null;
-      var msg = friendly(err);
-      if (state.loginMode === 'pw' && (err.status === 401 || err.status === 404)) msg = 'La clé GitHub enregistrée derrière ce mot de passe ne fonctionne plus (expirée ou supprimée). Connectez-vous avec une nouvelle clé GitHub, puis redéfinissez le mot de passe dans « Accès ».';
-      showLogin(msg);
+      showLogin(friendly(err));
     }).finally(function () {
-      lb.disabled = false; lb.textContent = 'Se connecter';
-    });
-  }
-
-  /* ---------- Accès par identifiant et mot de passe ----------
-   * La clé GitHub est chiffrée (AES-GCM) avec une clé dérivée de l'identifiant et du mot de passe
-   * (PBKDF2-SHA256, 600 000 tours). Seul le résultat chiffré est publié dans admin/access.json :
-   * le mot de passe n'est stocké nulle part. */
-  var ACCESS_PATH = 'admin/access.json';
-  var ITER = 600000;
-  function bytesToB64(u8) { var b = ''; for (var i = 0; i < u8.length; i++) b += String.fromCharCode(u8[i]); return btoa(b); }
-  function b64ToBytes(b64) { var b = atob(b64), u = new Uint8Array(b.length); for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; }
-  function deriveKey(user, pass, salt, iter) {
-    var enc = new TextEncoder();
-    return crypto.subtle.importKey('raw', enc.encode(user.trim().toLowerCase() + '\n' + pass), 'PBKDF2', false, ['deriveKey']).then(function (base) {
-      return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: salt, iterations: iter, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
-    });
-  }
-  function encryptToken(user, pass, token) {
-    var salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
-    return deriveKey(user, pass, salt, ITER).then(function (key) {
-      return crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(token));
-    }).then(function (ct) {
-      return { v: 1, kdf: 'PBKDF2-SHA256', iter: ITER, salt: bytesToB64(salt), iv: bytesToB64(iv), data: bytesToB64(new Uint8Array(ct)), updated: new Date().toISOString().slice(0, 10) };
-    });
-  }
-  function decryptToken(user, pass, acc) {
-    return deriveKey(user, pass, b64ToBytes(acc.salt), acc.iter || ITER).then(function (key) {
-      return crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(acc.iv) }, key, b64ToBytes(acc.data));
-    }).then(function (pt) { return new TextDecoder().decode(pt); });
-  }
-  function loadAccess() {
-    return fetch('access.json?t=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { state.access = j && j.data ? j : null; }).catch(function () { state.access = null; });
-  }
-  function loginWithPassword(user, pass, remember) {
-    if (!state.access) { showLogin('L\'accès par mot de passe n\'est pas encore configuré. Connectez-vous avec une clé GitHub.', 'token'); return; }
-    var b = $('pw-btn'); b.disabled = true; b.textContent = 'Vérification…';
-    decryptToken(user, pass, state.access).then(function (token) {
       b.disabled = false; b.textContent = 'Se connecter';
-      login(token, remember);
-    }).catch(function () {
-      b.disabled = false; b.textContent = 'Se connecter';
-      showLogin('Identifiant ou mot de passe incorrect.', 'pw');
     });
   }
-  function editAccess() {
-    var has = !!state.access;
-    openPop('Accès par mot de passe',
-      '<p class="mwa-note">Les responsables pourront se connecter avec cet identifiant et ce mot de passe, sans clé GitHub. Le mot de passe sert à chiffrer votre clé : il n\'est enregistré nulle part, notez-le. ' +
-      (has ? 'Un accès existe déjà (mis à jour le ' + R.esc(state.access.updated || '?') + ') : l\'enregistrer à nouveau remplace l\'ancien.' : '') + '</p>' +
-      field('f-user', 'Identifiant', '', 'text') +
-      field('f-pass', 'Mot de passe', '', 'password', 'Au moins 12 caractères. Une phrase est plus sûre et facile à retenir, par exemple « Le-chœur-chante-à-Nice-2026 ».') +
-      field('f-pass2', 'Confirmer le mot de passe', '', 'password') +
-      '<p class="mwa-warn">Ce site est public : n\'importe qui peut récupérer la version chiffrée et essayer de deviner le mot de passe. Un mot de passe court ou courant se devine facilement. Ne réutilisez pas un mot de passe d\'un autre compte.</p>' +
-      (has ? '<button type="button" class="mwa-btn mwa-danger" id="f-del-access">Supprimer l\'accès par mot de passe</button>' : ''),
-      function () {
-        var u = val('f-user'), p1 = document.getElementById('f-pass').value, p2 = document.getElementById('f-pass2').value;
-        if (u.length < 3) { toast('Choisissez un identifiant d\'au moins 3 caractères.', 'err'); return false; }
-        if (p1.length < 12) { toast('Le mot de passe doit faire au moins 12 caractères.', 'err'); return false; }
-        if (p1 !== p2) { toast('Les deux mots de passe ne sont pas identiques.', 'err'); return false; }
-        toast('Chiffrement et enregistrement…', '', 15000);
-        encryptToken(u, p1, state.token).then(function (acc) {
-          return putFile(ACCESS_PATH, JSON.stringify(acc, null, 2) + '\n', 'Met à jour l\'accès administration').then(function () { state.access = acc; });
-        }).then(function () { toast('Accès enregistré. Il fonctionnera d\'ici 1 à 2 minutes.', 'ok', 7000); })
-          .catch(function (err) { toast('Enregistrement impossible : ' + friendly(err), 'err', 9000); });
-        return true;
-      }, 'Enregistrer l\'accès');
-    var del = document.getElementById('f-del-access');
-    if (del) del.addEventListener('click', function () {
-      closePop();
-      getSha(ACCESS_PATH).then(function (sha) {
-        if (!sha) return;
-        return gh('DELETE', repoPath() + '/contents/' + ACCESS_PATH, { message: 'Supprime l\'accès par mot de passe', sha: sha, branch: CONFIG.branch });
-      }).then(function () { state.access = null; toast('Accès par mot de passe supprimé.', 'ok'); })
-        .catch(function (err) { toast('Suppression impossible : ' + friendly(err), 'err', 9000); });
-    });
+  function logout() {
+    api('logout', {}).catch(function () {}).then(function () { location.reload(); });
   }
-  function getSha(path) {
-    return gh('GET', repoPath() + '/contents/' + path + '?ref=' + CONFIG.branch).then(function (f) { return f.sha; })
-      .catch(function (err) { if (err.status === 404) return null; throw err; });
-  }
-  function putFile(path, text, message) {
-    return getSha(path).then(function (sha) {
-      var body = { message: message, content: b64encodeUtf8(text), branch: CONFIG.branch };
-      if (sha) body.sha = sha;
-      return gh('PUT', repoPath() + '/contents/' + path, body);
-    });
+  function onSessionLost(err) {
+    if (err && err.status === 401) { state.csrf = null; saveDraft(); showLogin('Votre session a expiré. Reconnectez-vous : vos modifications sont gardées en brouillon.'); return true; }
+    return false;
   }
 
   /* ---------- Apparence (couleurs et polices) ---------- */
@@ -317,14 +204,15 @@
 
   var TEMPLATES = {
     public: function () { return { text: 'Nouveau public' }; },
-    atelier: function () { return { image: { src: 'img/gospel.webp', alt: '' }, tag: 'Nouveau', title: 'Nouvel atelier', text: 'Décrivez l\'atelier en une ou deux phrases.' }; },
-    projet: function () { return { image: { src: 'img/concerts.webp', alt: '' }, title: 'Nouveau projet', text: 'Décrivez le projet en une ou deux phrases.' }; },
+    atelier: function () { return { image: { src: 'img/photos/atelier-choeur.webp', alt: '' }, tag: 'Nouveau', title: 'Nouvel atelier', text: 'Décrivez l\'atelier en une ou deux phrases.' }; },
+    projet: function () { return { image: { src: 'img/photos/opera-logo.webp', alt: '' }, title: 'Nouveau projet', text: 'Décrivez le projet en une ou deux phrases.' }; },
     event: function () { return { date: todayISO(14), time: '', place: 'Nice', title: 'Nouvel événement', text: 'Décrivez l\'événement : programme, public, tarif…', link: { label: '', href: '' } }; },
-    news: function () { return { date: todayISO(0), tag: 'Nouveau', title: 'Nouvelle actualité', text: 'Racontez ce qui s\'est passé ou ce qui arrive.', image: { src: 'img/fete.webp', alt: '' }, link: { label: '', href: '' } }; },
+    news: function () { return { date: todayISO(0), tag: 'Nouveau', title: 'Nouvelle actualité', text: 'Racontez ce qui s\'est passé ou ce qui arrive.', image: { src: 'img/photos/cabaret-21-juin.webp', alt: '' }, link: { label: '', href: '' } }; },
     contact: function () { return { title: 'Nouveau contact', text: 'Précisez comment nous joindre.', link: { label: 'Lien', href: 'https://' } }; },
-    row: function () { return { k: 'Info', v: 'Valeur' }; }
+    row: function () { return { k: 'Info', v: 'Valeur' }; },
+    slot: function () { return { title: 'Nouvel atelier', when: 'Jour · horaire' }; }
   };
-  var ADD_LABEL = { public: '+ Public', atelier: '+ Ajouter un atelier', projet: '+ Ajouter un projet', event: '+ Ajouter un événement', news: '+ Ajouter une actualité', contact: '+ Ajouter un contact', row: '+ Ajouter une ligne' };
+  var ADD_LABEL = { public: '+ Public', atelier: '+ Ajouter un atelier', projet: '+ Ajouter un projet', event: '+ Ajouter un événement', news: '+ Ajouter une actualité', contact: '+ Ajouter un contact', row: '+ Ajouter une ligne', slot: '+ Ajouter un créneau' };
 
   function decorate(root) {
     // Textes
@@ -568,47 +456,25 @@
     var used = usedImages(state.data);
     var jsonText = JSON.stringify(state.data, null, 2) + '\n';
     var html = R.fullDocument(state.data);
-    var head, baseTree;
-    gh('GET', repoPath() + '/contents/' + CONFIG.contentPath + '?ref=' + CONFIG.branch).then(function (f) {
-      if (f.sha !== state.contentSha) {
-        var e = new Error('Le site a été modifié par quelqu\'un d\'autre depuis que vous avez ouvert cette page. Rechargez la page pour récupérer sa version (vos modifications non publiées seront proposées en brouillon), puis publiez à nouveau.');
-        e.status = 'conflict'; throw e;
-      }
-      return gh('GET', repoPath() + '/git/ref/heads/' + CONFIG.branch);
-    }).then(function (ref) {
-      head = ref.object.sha;
-      return gh('GET', repoPath() + '/git/commits/' + head);
-    }).then(function (commit) {
-      baseTree = commit.tree.sha;
-      var imgs = Object.keys(state.pending).filter(function (p) { return used[p]; });
-      return imgs.reduce(function (pr, p) {
-        return pr.then(function (acc) {
-          return gh('POST', repoPath() + '/git/blobs', { content: state.pending[p].b64, encoding: 'base64' }).then(function (b) {
-            acc.push({ path: p, mode: '100644', type: 'blob', sha: b.sha }); return acc;
-          });
-        });
-      }, Promise.resolve([]));
-    }).then(function (tree) {
-      tree.push({ path: CONFIG.contentPath, mode: '100644', type: 'blob', content: jsonText });
-      tree.push({ path: 'index.html', mode: '100644', type: 'blob', content: html });
-      return gh('POST', repoPath() + '/git/trees', { base_tree: baseTree, tree: tree });
-    }).then(function (t) {
-      return gh('POST', repoPath() + '/git/commits', { message: 'Mise à jour du site depuis l\'administration', tree: t.sha, parents: [head] });
-    }).then(function (c) {
-      return gh('PATCH', repoPath() + '/git/refs/heads/' + CONFIG.branch, { sha: c.sha });
-    }).then(function () {
-      return gh('GET', repoPath() + '/contents/' + CONFIG.contentPath + '?ref=' + CONFIG.branch);
-    }).then(function (f) {
-      state.contentSha = f.sha;
+    var imgs = Object.keys(state.pending).filter(function (p) { return used[p]; });
+    imgs.reduce(function (pr, p, i) {
+      return pr.then(function () {
+        btn.textContent = 'Envoi des photos ' + (i + 1) + '/' + imgs.length + '…';
+        return api('upload', { path: p, data: state.pending[p].b64 });
+      });
+    }, Promise.resolve()).then(function () {
+      btn.textContent = 'Publication…';
+      return api('publish', { base: state.contentSha, content: jsonText, html: html });
+    }).then(function (j) {
+      state.contentSha = j.version;
       state.saved = jsonText;
-      // les photos publiées restent affichées depuis la mémoire le temps que GitHub Pages se mette à jour
       Object.keys(state.pending).forEach(function (k) { state.shown[k] = state.pending[k]; });
       state.pending = {};
       markChanged();
       clearDraft();
-      toast('Publié ! Le site sera à jour d\'ici 1 à 2 minutes.', 'ok', 7000);
+      toast('Publié ! Le site est à jour.', 'ok', 6000);
     }).catch(function (err) {
-      toast(err.status === 'conflict' ? err.message : 'Publication impossible : ' + friendly(err), 'err', 12000);
+      if (!onSessionLost(err)) toast('Publication impossible : ' + friendly(err), 'err', 12000);
     }).finally(function () {
       btn.textContent = 'Publier'; document.body.classList.remove('mwa-busy');
       btn.disabled = !state.changes;
@@ -635,31 +501,21 @@
   }
 
   function init() {
-    $('login-form').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var tk = $('token').value.trim();
-      if (!tk) { showLogin('Collez votre clé d\'accès GitHub.'); return; }
-      $('login-error').hidden = true;
-      login(tk, $('remember').checked);
-    });
     $('pw-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var u = $('pw-user').value, pw = $('pw-pass').value;
-      if (!u.trim() || !pw) { showLogin('Saisissez l\'identifiant et le mot de passe.', 'pw'); return; }
+      if (!u.trim() || !pw) { showLogin('Saisissez l\'identifiant et le mot de passe.'); return; }
       $('pw-error').hidden = true;
-      loginWithPassword(u, pw, $('pw-remember').checked);
+      login(u, pw, $('pw-remember').checked);
     });
-    $('to-token').addEventListener('click', function () { showLogin('', 'token'); });
-    $('to-pw').addEventListener('click', function () { showLogin('', 'pw'); });
     $('theme-btn').addEventListener('click', editTheme);
-    $('access-btn').addEventListener('click', editAccess);
     $('preview').addEventListener('click', onPreviewClick);
     $('publish-btn').addEventListener('click', publish);
     $('discard-btn').addEventListener('click', discard);
     $('logout-btn').addEventListener('click', function () {
       if (state.changes) {
-        openPop('Se déconnecter ?', '<p>Vos modifications non publiées restent enregistrées sur cet appareil et seront proposées à la prochaine connexion.</p>', function () { sdel(TOKEN_KEY); location.reload(); return true; }, 'Se déconnecter');
-      } else { sdel(TOKEN_KEY); location.reload(); }
+        openPop('Se déconnecter ?', '<p>Vos modifications non publiées restent enregistrées sur cet appareil et seront proposées à la prochaine connexion.</p>', function () { saveDraft(); logout(); return true; }, 'Se déconnecter');
+      } else logout();
     });
     $('help-btn').addEventListener('click', function () {
       openPop('Comment modifier le site', '<ul style="display:flex;flex-direction:column;gap:.5rem;padding-left:1.1rem;margin:0">' +
@@ -670,9 +526,8 @@
         '<li><b>Cartes et listes</b> : survolez-les pour monter, descendre, dupliquer ou supprimer. Les boutons « + Ajouter » créent un nouvel élément.</li>' +
         '<li><b>Cadrage d\'une photo</b> : cliquez sur la photo puis sur la partie à garder visible.</li>' +
         '<li><b>Apparence</b> : changez les couleurs et les polices de tout le site.</li>' +
-        '<li><b>Accès</b> : définissez l\'identifiant et le mot de passe des responsables.</li>' +
         '<li><b>Agenda</b> : les événements passés sont masqués automatiquement sur le site.</li>' +
-        '<li><b>Publier</b> envoie tout en ligne. Le site est à jour 1 à 2 minutes après.</li></ul>', function () { return true; }, 'Compris');
+        '<li><b>Publier</b> met le site à jour immédiatement. Une sauvegarde de la version précédente est gardée sur le serveur.</li></ul>', function () { return true; }, 'Compris');
       $('pop-cancel').hidden = true;
     });
     $('tip-close').addEventListener('click', function () { $('tip').hidden = true; sset('local', 'mwasa_tip_seen', '1'); });
@@ -692,15 +547,10 @@
     $('file').addEventListener('change', onFile);
     window.addEventListener('beforeunload', function (e) { if (state.changes) { saveDraft(); } });
 
-    var tk = sget(TOKEN_KEY);
-    loadAccess().then(function () {
-      if (tk) {
-        state.token = tk;
-        gh('GET', repoPath()).then(loadContent).then(startEditor).catch(function (err) {
-          sdel(TOKEN_KEY); state.token = null; showLogin(friendly(err));
-        });
-      } else showLogin();
-    });
+    api('session').then(function (j) {
+      if (j.logged) { state.csrf = j.csrf; return loadContent().then(startEditor); }
+      showLogin();
+    }).catch(function (err) { showLogin(friendly(err)); });
   }
 
   init();
