@@ -35,7 +35,7 @@ Après 5 mots de passe faux, la connexion est bloquée 15 minutes pour l'apparei
 
 ## Mettre le site en ligne sur OVH
 
-Aucun logiciel à installer : le fichier **`envoyer-sur-ovh.bat`** utilise l'outil d'envoi sécurisé intégré à Windows 10 et 11 (`scp`, connexion chiffrée SFTP).
+Aucun logiciel à installer : le fichier **`envoyer-sur-ovh.bat`** utilise l'outil d'envoi sécurisé intégré à Windows 10 et 11 (`sftp`, connexion chiffrée).
 
 1. Mot de passe FTP : espace client OVH → **Web Cloud → Hébergements → mwasamusiki.com → FTP-SSH** → « Modifier le mot de passe » sur la ligne `mwasamv`.
 2. Double-cliquez sur `envoyer-sur-ovh.bat` et choisissez :

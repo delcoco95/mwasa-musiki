@@ -13,9 +13,9 @@ echo   Envoi du site Mwasa Musiki sur l'hebergement OVH (connexion chiffree SFTP
 echo  ==============================================================
 echo.
 
-where scp >nul 2>nul
+where sftp >nul 2>nul
 if errorlevel 1 (
-  echo  L'outil "scp" de Windows est introuvable.
+  echo  L'outil "sftp" de Windows est introuvable.
   echo  Parametres Windows ^> Applications ^> Fonctionnalites facultatives ^> ajouter "Client OpenSSH".
   echo.
   pause
@@ -53,13 +53,27 @@ if not exist ".env" (
   pause
   exit /b 1
 )
-scp -r www .env %COMPTE%@%HOTE%:.
+set "CMD=%TEMP%\mwasa-envoi.txt"
+> "%CMD%" echo put -r www
+>> "%CMD%" echo put .env
+>> "%CMD%" echo chmod 600 .env
+>> "%CMD%" echo bye
+sftp -o StrictHostKeyChecking=ask %COMPTE%@%HOTE% < "%CMD%"
 goto fin
 
 :miseajour
-scp -r www\admin www\assets www\.htaccess %COMPTE%@%HOTE%:www/
-if errorlevel 1 goto fin
-scp -r www\img\photos www\img\logo.svg www\img\logo.png www\img\.htaccess %COMPTE%@%HOTE%:www/img/
+set "CMD=%TEMP%\mwasa-envoi.txt"
+> "%CMD%" echo put -r www/admin www/admin
+>> "%CMD%" echo put -r www/assets www/assets
+>> "%CMD%" echo put www/.htaccess www/.htaccess
+>> "%CMD%" echo put -r www/img/photos www/img/photos
+>> "%CMD%" echo put www/img/logo.svg www/img/logo.svg
+>> "%CMD%" echo put www/img/logo.png www/img/logo.png
+>> "%CMD%" echo put www/img/.htaccess www/img/.htaccess
+>> "%CMD%" echo put www/img/uploads/.htaccess www/img/uploads/.htaccess
+>> "%CMD%" echo put www/content/.htaccess www/content/.htaccess
+>> "%CMD%" echo bye
+sftp -o StrictHostKeyChecking=ask %COMPTE%@%HOTE% < "%CMD%"
 goto fin
 
 :fin
@@ -67,7 +81,7 @@ echo.
 if errorlevel 1 (
   echo  L'envoi a echoue. Verifiez le mot de passe FTP et votre connexion Internet, puis relancez.
 ) else (
-  echo  Envoi termine. Ouvrez https://mwasamusiki.com
+  echo  Envoi termine. Verifiez ci-dessus qu'il n'y a pas de message d'erreur, puis ouvrez https://mwasamusiki.com
 )
 echo.
 pause
