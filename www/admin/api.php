@@ -312,7 +312,15 @@ function session_info($env) {
 $action = isset($_GET['action']) ? (string) $_GET['action'] : '';
 $method = $_SERVER['REQUEST_METHOD'];
 
-if ($action === 'ping') out(200, array('ok' => true, 'php' => PHP_VERSION, 'https' => is_https(), 'env' => env_file() !== null, 'envOutsideWww' => env_file() === dirname(WWW) . '/.env', 'page' => is_file(WWW . '/' . PAGE)));
+if ($action === 'ping') {
+    $home = dirname(WWW);
+    out(200, array('ok' => true, 'php' => PHP_VERSION, 'https' => is_https(), 'env' => env_file() !== null,
+        'envOutsideWww' => env_file() === $home . '/.env', 'envWritable' => env_file() ? is_writable(env_file()) : false,
+        'page' => is_file(WWW . '/' . PAGE), 'wwwWritable' => is_writable(WWW), 'contentWritable' => is_writable(WWW . '/content') && (!is_file(content_path()) || is_writable(content_path())),
+        'dataDir' => is_dir($home . '/mwasa-data') ? (is_writable($home . '/mwasa-data') ? 'ok' : 'non inscriptible') : (is_writable($home) ? 'à créer' : 'impossible'),
+        'sessions' => is_dir($home . '/mwasa-data/sessions'), 'logins' => is_file($home . '/mwasa-data/auth.log') ? count(file($home . '/mwasa-data/auth.log')) : 0,
+        'hasHash' => (bool) preg_match('/^ADMIN_PASSWORD_HASH=/m', env_file() ? (string) file_get_contents(env_file()) : '')));
+}
 
 $env = load_env();
 start_session();

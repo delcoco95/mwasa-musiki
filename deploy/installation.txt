@@ -9,6 +9,7 @@
 -mkdir www/img/uploads
 -mkdir www/assets/admin/vendor
 put www/.htaccess www/.htaccess
+put www/accueil-initial.html www/accueil-initial.html
 put www/accueil.html www/accueil.html
 put www/admin/.htaccess www/admin/.htaccess
 put www/admin/api.php www/admin/api.php
@@ -69,6 +70,7 @@ chmod 755 www/img/photos
 chmod 755 www/img/uploads
 chmod 755 www/assets/admin/vendor
 chmod 644 www/.htaccess
+chmod 644 www/accueil-initial.html
 chmod 644 www/accueil.html
 chmod 644 www/admin/.htaccess
 chmod 644 www/admin/api.php

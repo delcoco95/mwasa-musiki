@@ -3,6 +3,8 @@ const fs = require('fs');
 const { fullDocument } = require('./www/assets/render.js');
 const data = JSON.parse(fs.readFileSync(__dirname + '/www/content/site.json', 'utf8'));
 fs.writeFileSync(__dirname + '/www/accueil.html', fullDocument(data));
+// Page de secours envoyée avec le programme : affichée tant que l'administration n'a pas publié accueil.html
+fs.writeFileSync(__dirname + '/www/accueil-initial.html', fullDocument(data));
 console.log('accueil.html généré');
 
 // Version des fichiers de l'administration : force le navigateur à charger la dernière version après chaque mise à jour.

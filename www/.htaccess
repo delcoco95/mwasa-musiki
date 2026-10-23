@@ -6,7 +6,7 @@ AddType font/woff2 .woff2
 ServerSignature Off
 
 # Page d'accueil : accueil.html (OVH réserve www/index.html à sa page « Site en construction »)
-DirectoryIndex accueil.html index.php index.html
+DirectoryIndex accueil.html accueil-initial.html index.php index.html
 
 # ---------- HTTPS obligatoire, adresse unique https://mwasamusiki.com ----------
 # (méthode recommandée par OVH : les requêtes non chiffrées arrivent sur le port 80)
