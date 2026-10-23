@@ -5,6 +5,15 @@ const data = JSON.parse(fs.readFileSync(__dirname + '/www/content/site.json', 'u
 fs.writeFileSync(__dirname + '/www/accueil.html', fullDocument(data));
 console.log('accueil.html généré');
 
+// Version des fichiers de l'administration : force le navigateur à charger la dernière version après chaque mise à jour.
+const crypto = require('crypto');
+const h = crypto.createHash('sha256');
+['www/assets/admin/admin.js', 'www/assets/admin/admin.css', 'www/assets/render.js', 'www/assets/site.css', 'www/assets/admin/vendor/qrcode.js'].forEach(f => h.update(fs.readFileSync(__dirname + '/' + f)));
+const ver = h.digest('hex').slice(0, 10);
+const adminHtml = __dirname + '/www/admin/index.html';
+fs.writeFileSync(adminHtml, fs.readFileSync(adminHtml, 'utf8').replace(/(\.\.\/assets\/[^"?]+\.(?:js|css))(\?v=[a-z0-9]+)?"/g, '$1?v=' + ver + '"'));
+console.log('admin : version ' + ver);
+
 // Listes de commandes sftp utilisées par envoyer-sur-ovh.bat (droits : dossiers 755, fichiers 644, .env 600).
 const path = require('path');
 function walk(dir) {
