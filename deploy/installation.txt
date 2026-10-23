@@ -8,6 +8,7 @@
 -mkdir www/img/photos
 -mkdir www/img/uploads
 -mkdir www/assets/admin/vendor
+-rm www/index.html
 put www/.htaccess www/.htaccess
 put www/admin/.htaccess www/admin/.htaccess
 put www/admin/api.php www/admin/api.php

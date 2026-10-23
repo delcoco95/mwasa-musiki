@@ -21,6 +21,8 @@ const managed = f => f === 'www/index.html' || f === 'www/content/site.json' || 
 function script(list, withEnv) {
   const L = [];
   dirs.forEach(d => L.push('-mkdir ' + d));
+  // OVH place un raccourci « Site en construction » à la place de www/index.html : on le retire avant l'envoi
+  if (list.includes('www/index.html')) L.push('-rm www/index.html');
   list.forEach(f => L.push('put ' + f + ' ' + f));
   dirs.forEach(d => L.push('chmod 755 ' + d));
   list.forEach(f => L.push('chmod 644 ' + f));
