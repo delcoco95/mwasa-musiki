@@ -588,7 +588,7 @@
     if (socEl) { e.preventDefault(); editSocial(+socEl.dataset.social); return; }
     if (taEl) { e.preventDefault(); editTextarea(taEl.dataset.textarea); return; }
     if (e.target.closest('#burger')) { var m = document.getElementById('menu'); m.classList.toggle('open'); return; }
-    if (imgEl) { e.preventDefault(); editMedia(imgEl.dataset.img); return; }
+    if (imgEl) { e.preventDefault(); if (imgEl.classList.contains('video-empty')) editYouTube(imgEl.dataset.img); else editMedia(imgEl.dataset.img); return; }
     if (e.target.closest('[data-consent-open]')) { e.preventDefault(); return; }
     if (linkEl) { e.preventDefault(); editLink(linkEl.dataset.link); return; }
     if (evEl) { e.preventDefault(); editDate(evEl.dataset.event); return; }
@@ -678,16 +678,16 @@
   function editMedia(path) {
     var o = getPath(state.data, path) || {};
     var kind = o.video ? o.video.kind : 'photo';
-    if (kind === 'file') editVideoFile(path); else if (kind === 'youtube') editYouTube(path); else editImage(path);
+    if (kind === 'file') editVideoFile(path); else if (kind === 'youtube' || !o.src) editYouTube(path); else editImage(path);
   }
   function editYouTube(path) {
     var o = getPath(state.data, path);
     var cur = o.video && o.video.kind === 'youtube' ? 'https://www.youtube.com/watch?v=' + o.video.id : '';
     openPop('Photo ou vidéo', mediaTabs('youtube') +
       field('f-yt', 'Adresse de la vidéo YouTube', cur, 'url', 'Sur YouTube : bouton « Partager » → « Copier ». Exemple : https://youtu.be/…') +
-      field('f-alt', 'Titre de la vidéo', o.alt, 'text', 'Lu par les lecteurs d\'écran et affiché sur le bouton de lecture.') +
-      '<p class="mwa-note">L\'image affichée avant la lecture est la photo actuelle de cet emplacement : changez-la avec l\'onglet « Photo ». La vidéo n\'est chargée qu\'après l\'accord du visiteur (RGPD).</p>' +
-      (o.video ? '<button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo et garder la photo</button>' : ''),
+      field('f-alt', 'Titre de la vidéo', o.alt, 'text', 'Lu par les lecteurs d\'écran.') +
+      '<p class="mwa-note">Le lecteur YouTube s\'affiche directement sur la page. La loi (RGPD) impose seulement qu\'un nouveau visiteur l\'autorise une fois ; ensuite la vidéo s\'affiche toute seule.</p>' +
+      (o.video ? '<button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo</button>' : ''),
       function () {
         var id = R.youtubeId(val('f-yt'));
         if (!id) { toast('Adresse YouTube non reconnue.', 'err'); return false; }
@@ -710,11 +710,11 @@
       '<label class="mwa-check"><input type="checkbox" id="f-auto"' + (cur && cur.autoplay ? ' checked' : '') + '> Lecture automatique en boucle, sans son (vidéo d\'ambiance)</label>' +
       field('f-alt', 'Description de la vidéo', o.alt, 'text') +
       '<p id="f-space" class="mwa-hint"></p>' +
-      (o.video ? '<button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo et garder la photo</button>' : ''),
+      (o.video ? '<button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo</button>' : ''),
       function () {
         var chosen = state._newVideo;
         if (!chosen && !cur) { toast('Choisissez d\'abord une vidéo.', 'err'); return false; }
-        if (chosen) { o.video = { kind: 'file', src: chosen.path, autoplay: false }; if (chosen.poster) o.src = chosen.poster; }
+        if (chosen) { o.video = { kind: 'file', src: chosen.path, autoplay: false }; }
         o.video.autoplay = document.getElementById('f-auto').checked;
         o.alt = val('f-alt') || o.alt;
         state._newVideo = null;
@@ -736,30 +736,10 @@
     var path = 'img/uploads/' + slug(f.name) + '-' + Date.now().toString(36) + '.' + ext;
     var url = URL.createObjectURL(f);
     state.pendingVideos[path] = { file: f, url: url };
-    toast('Préparation de l\'image d\'aperçu…', '', 6000);
-    posterFrom(url).then(function (dataUrl) {
-      var pp = 'img/uploads/' + slug(f.name) + '-apercu-' + Date.now().toString(36) + '.webp';
-      state.pending[pp] = { b64: dataUrl.split(',')[1], url: dataUrl };
-      state._newVideo = { path: path, poster: pp };
-    }).catch(function () { state._newVideo = { path: path, poster: null }; }).then(function () {
+    state._newVideo = { path: path, poster: null };
+    Promise.resolve().then(function () {
       var info = document.getElementById('f-vidinfo'); if (info) info.textContent = 'Vidéo choisie : ' + f.name + ' (' + Math.round(f.size / 1048576 * 10) / 10 + ' Mo). Cliquez sur « Valider ».';
       toast('Vidéo prête. Elle sera envoyée au moment de « Publier ».', 'ok');
-    });
-  }
-  /* Image d'aperçu tirée de la vidéo (affichée avant la lecture et dans les pages légères) */
-  function posterFrom(url) {
-    return new Promise(function (res, rej) {
-      var v = document.createElement('video'); v.muted = true; v.preload = 'auto'; v.src = url; v.playsInline = true;
-      var done = false, to = setTimeout(function () { if (!done) rej(new Error('délai')); }, 10000);
-      v.addEventListener('loadeddata', function () { try { v.currentTime = Math.min(1, (v.duration || 2) / 3); } catch (e) { rej(e); } });
-      v.addEventListener('seeked', function () {
-        done = true; clearTimeout(to);
-        var max = 1600, s = Math.min(1, max / Math.max(v.videoWidth, v.videoHeight));
-        var c = document.createElement('canvas'); c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
-        c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
-        res(c.toDataURL('image/webp', 0.8));
-      });
-      v.addEventListener('error', function () { rej(new Error('lecture')); });
     });
   }
   function editImage(path) {
@@ -769,7 +749,7 @@
     var ratio = shown && shown.clientWidth && shown.clientHeight ? (shown.clientWidth / shown.clientHeight) : 1.5;
     var u = R.esc(imgURL(o.src));
     openPop('Photo ou vidéo', mediaTabs('photo') +
-      (o.video ? '<p class="mwa-warn">Cet emplacement affiche actuellement une vidéo. La photo ci-dessous sert d\'image d\'aperçu ; pour revenir à une simple photo, utilisez « Retirer la vidéo ».</p><button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo et garder la photo</button>' : '') +
+      (o.video ? '<p class="mwa-warn">Cet emplacement affiche actuellement une vidéo. Pour afficher une photo à la place, utilisez « Retirer la vidéo ».</p><button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo</button>' : '') +
       '<div class="mwa-field"><label>Cadrage : cliquez sur la partie à garder visible</label>' +
       '<div class="mwa-focus" id="f-focus"><img id="f-thumb" alt="" src="' + u + '"><span class="dot" id="f-dot"></span></div>' +
       '<small>La photo est rognée automatiquement pour remplir son cadre. Le point blanc indique ce qui reste toujours visible.</small></div>' +

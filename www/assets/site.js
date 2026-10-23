@@ -58,27 +58,23 @@
     f.setAttribute('allowfullscreen', '');
     f.referrerPolicy = 'strict-origin-when-cross-origin';
     var ask = el.querySelector('.yt-ask'); if (ask) ask.remove();
+    if (!document.body.contains(el)) return;
     el.appendChild(f);
   }
+  function loadAll() { ytBlocks.forEach(function (el) { loadYouTube(el, false); }); }
+  /* Sans accord : un cadre noir explique pourquoi la vidéo n'est pas encore affichée */
   function askInline(el) {
-    if (el.querySelector('.yt-ask')) return;
+    if (el.querySelector('.yt-ask, iframe')) return;
     var box = document.createElement('div');
     box.className = 'yt-ask';
-    box.innerHTML = '<p>Cette vidéo est hébergée par YouTube (Google), qui dépose des cookies quand elle est lancée.</p>' +
-      '<div class="row"><button type="button" class="btn btn-fill" data-yes>Autoriser et lire</button><button type="button" class="btn btn-ghost" data-no>Non merci</button></div>' +
+    box.innerHTML = '<p>Cette vidéo est hébergée par YouTube (Google), qui utilise des cookies. Elle s\'affiche dès que vous l\'autorisez.</p>' +
+      '<div class="row"><button type="button" class="btn btn-fill" data-yes>Afficher la vidéo</button></div>' +
       '<a href="https://www.youtube.com/watch?v=' + el.getAttribute('data-yt') + '" target="_blank" rel="noopener">Voir sur YouTube</a>';
-    box.querySelector('[data-yes]').addEventListener('click', function () { saveConsent(true); showBanner(false); loadYouTube(el, true); });
-    box.querySelector('[data-no]').addEventListener('click', function () { box.remove(); });
+    box.querySelector('[data-yes]').addEventListener('click', function () { saveConsent(true); showBanner(false); loadAll(); });
     el.appendChild(box);
-    box.querySelector('[data-yes]').focus();
   }
-  ytBlocks.forEach(function (el) {
-    var btn = el.querySelector('.yt-play');
-    if (btn) btn.addEventListener('click', function () {
-      var c = readConsent();
-      if (c && c.youtube) loadYouTube(el, true); else askInline(el);
-    });
-  });
+  var c0 = readConsent();
+  if (c0 && c0.youtube) loadAll(); else ytBlocks.forEach(askInline);
   if (banner) {
     banner.addEventListener('click', function (e) {
       var a = e.target.closest('[data-consent]');
@@ -86,10 +82,11 @@
       var yes = a.getAttribute('data-consent') === 'accept';
       saveConsent(yes);
       showBanner(false);
-      if (!yes) ytBlocks.forEach(function (el) { var f = el.querySelector('iframe'); if (f) f.remove(); });
+      if (yes) loadAll();
+      else ytBlocks.forEach(function (el) { var f = el.querySelector('iframe'); if (f) f.remove(); askInline(el); });
     });
     // Le bandeau n'apparaît que si la page contient des vidéos YouTube et qu'aucun choix n'a été fait
-    if (ytBlocks.length && !readConsent()) showBanner(true);
+    if (ytBlocks.length && !c0) showBanner(true);
   }
   document.querySelectorAll('[data-consent-open]').forEach(function (btn) {
     btn.addEventListener('click', function () { showBanner(true); var f = banner && banner.querySelector('button'); if (f) f.focus(); });
