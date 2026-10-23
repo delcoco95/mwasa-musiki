@@ -3,6 +3,8 @@ Options -Indexes
 AddDefaultCharset UTF-8
 AddType image/webp .webp
 AddType font/woff2 .woff2
+AddType video/mp4 .mp4
+AddType video/webm .webm
 ServerSignature Off
 
 # Page d'accueil : accueil.html (OVH réserve www/index.html à sa page « Site en construction »)
@@ -19,6 +21,9 @@ RewriteRule ^(.*)$ https://mwasamusiki.com/$1 [R=301,L]
 # L'ancienne adresse /index.html renvoie vers l'accueil (seulement quand un visiteur la demande)
 RewriteCond %{THE_REQUEST} \s/index\.html[\s?]
 RewriteRule ^index\.html$ / [R=301,L]
+# Mentions légales : version de départ tant que l'administration n'a pas publié la sienne
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^mentions-legales\.html$ mentions-legales-initial.html [L]
 
 # ---------- Fichiers jamais servis ----------
 # Fichiers cachés (.env, .htaccess, .git…), sauvegardes et journaux
@@ -41,7 +46,7 @@ RedirectMatch 404 /\.git
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
   Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
   Header always set Cross-Origin-Opener-Policy "same-origin"
-  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; frame-src https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
   Header always unset X-Powered-By
 </IfModule>
 
@@ -49,6 +54,8 @@ RedirectMatch 404 /\.git
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType video/mp4 "access plus 30 days"
+  ExpiresByType video/webm "access plus 30 days"
   ExpiresByType image/png "access plus 30 days"
   ExpiresByType image/svg+xml "access plus 30 days"
   ExpiresByType font/woff2 "access plus 1 year"

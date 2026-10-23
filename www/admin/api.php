@@ -33,6 +33,10 @@ define('MAX_LONG', 30 * 86400);         // durée max avec « rester connecté �
 define('PENDING_2FA', 5 * 60);          // délai pour saisir le code après le mot de passe
 define('MIN_PASSWORD', 12);
 define('PAGE', 'accueil.html');      // page d'accueil publiée (OVH bloque www/index.html)
+define('LEGAL_PAGE', 'mentions-legales.html');
+define('UPLOAD_QUOTA', 60 * 1024 * 1024); // place maximale des photos et vidéos envoyées (hébergement de 100 Mo)
+define('VIDEO_MAX', 40 * 1024 * 1024);
+define('LOG_DAYS', 180);              // conservation du journal de sécurité : 6 mois
 
 function out($code, $data) { http_response_code($code); echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit; }
 function fail($code, $msg, $extra = array()) { out($code, array_merge(array('ok' => false, 'error' => $msg), $extra)); }
@@ -113,6 +117,11 @@ function atomic_write($path, $content, $mode = 0644) {
     @chmod($tmp, $mode);
     if (!@rename($tmp, $path)) { @unlink($tmp); fail(500, "Impossible de remplacer " . basename($path) . '.'); }
 }
+function uploads_size() {
+    $t = 0;
+    foreach ((array) glob(WWW . '/img/uploads/*') as $f) if (is_file($f)) $t += filesize($f);
+    return $t;
+}
 function content_path() { return WWW . '/content/site.json'; }
 function content_version($text) { return hash('sha256', $text); }
 function backup_current() {
@@ -120,10 +129,11 @@ function backup_current() {
     $stamp = date('Ymd-His');
     if (is_file(content_path())) @copy(content_path(), "$dir/$stamp-site.json");
     if (is_file(WWW . '/' . PAGE)) @copy(WWW . '/' . PAGE, "$dir/$stamp-accueil.html");
+    if (is_file(WWW . '/' . LEGAL_PAGE)) @copy(WWW . '/' . LEGAL_PAGE, "$dir/$stamp-mentions.html");
     $files = glob("$dir/*-site.json");
     if ($files && count($files) > 30) {
         sort($files);
-        foreach (array_slice($files, 0, count($files) - 30) as $old) { @unlink($old); @unlink(str_replace('-site.json', '-accueil.html', $old)); }
+        foreach (array_slice($files, 0, count($files) - 30) as $old) { @unlink($old); @unlink(str_replace('-site.json', '-accueil.html', $old)); @unlink(str_replace('-site.json', '-mentions.html', $old)); }
     }
 }
 
@@ -133,8 +143,11 @@ function auth_log($event) {
     $f = data_dir() . '/auth.log';
     $ua = isset($_SERVER['HTTP_USER_AGENT']) ? substr($_SERVER['HTTP_USER_AGENT'], 0, 160) : '';
     @file_put_contents($f, json_encode(array('t' => date('c'), 'ip' => client_ip(), 'e' => $event, 'ua' => $ua), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . "\n", FILE_APPEND | LOCK_EX);
-    if (@filesize($f) > 512 * 1024) { // garde les 2000 dernières lignes
-        $l = file($f); @file_put_contents($f, implode('', array_slice($l, -2000)), LOCK_EX);
+    // Conservation limitée (RGPD) : on retire les lignes de plus de 6 mois et on garde au plus 2000 lignes
+    if (mt_rand(1, 20) === 1 || @filesize($f) > 512 * 1024) {
+        $limit = time() - LOG_DAYS * 86400; $keep = array();
+        foreach ((array) @file($f) as $l) { $j = json_decode($l, true); if ($j && strtotime($j['t']) >= $limit) $keep[] = $l; }
+        @file_put_contents($f, implode('', array_slice($keep, -2000)), LOCK_EX);
     }
 }
 function read_log($n) {
@@ -450,6 +463,40 @@ switch ($action) {
         atomic_write(WWW . '/' . $path, $bin);
         out(200, array('ok' => true, 'path' => $path));
 
+    case 'upload_chunk':
+        if ($method !== 'POST') fail(405, 'Méthode non autorisée.');
+        require_login(); require_csrf();
+        $b = json_body();
+        $path = str_field($b, 'path');
+        if (!preg_match('#^img/uploads/[a-z0-9-]{1,80}\.(mp4|webm)$#', $path, $mm)) fail(400, 'Nom de vidéo invalide.');
+        $index = isset($b['index']) ? (int) $b['index'] : -1;
+        $total = isset($b['total']) ? (int) $b['total'] : 0;
+        $size = isset($b['size']) ? (int) $b['size'] : 0;
+        if ($index < 0 || $total < 1 || $total > 40 || $index >= $total) fail(400, 'Morceau invalide.');
+        if ($size < 1000 || $size > VIDEO_MAX) fail(413, 'Vidéo trop lourde : 40 Mo maximum. Pour une vidéo plus longue, utilisez YouTube.');
+        if ($index === 0 && uploads_size() + $size > UPLOAD_QUOTA) fail(507, "Plus assez de place sur l'hébergement pour cette vidéo. Supprimez d'anciennes vidéos ou utilisez YouTube.");
+        $bin = base64_decode(str_field($b, 'data'), true);
+        if ($bin === false || strlen($bin) > 1.6 * 1024 * 1024) fail(400, 'Morceau illisible.');
+        $tmp = data_dir() . '/attempts/upload-' . hash('sha256', session_id() . $path);
+        if ($index === 0) @unlink($tmp);
+        elseif (!is_file($tmp) || filesize($tmp) === 0) fail(409, 'Envoi interrompu, recommencez.');
+        if (@file_put_contents($tmp, $bin, FILE_APPEND | LOCK_EX) === false) fail(500, "Impossible d'écrire la vidéo.");
+        if (filesize($tmp) > VIDEO_MAX) { @unlink($tmp); fail(413, 'Vidéo trop lourde.'); }
+        if ($index < $total - 1) out(200, array('ok' => true, 'received' => $index + 1));
+        // Dernier morceau : vérification du format puis mise en place
+        $h = (string) file_get_contents($tmp, false, null, 0, 16);
+        $isMp4 = substr($h, 4, 4) === 'ftyp';
+        $isWebm = substr($h, 0, 4) === "\x1A\x45\xDF\xA3";
+        if (($mm[1] === 'mp4' && !$isMp4) || ($mm[1] === 'webm' && !$isWebm) || filesize($tmp) !== $size) { @unlink($tmp); fail(400, "Ce fichier n'est pas une vidéo MP4 ou WebM valide."); }
+        if (!@rename($tmp, WWW . '/' . $path)) { @unlink($tmp); fail(500, 'Impossible de ranger la vidéo.'); }
+        @chmod(WWW . '/' . $path, 0644);
+        auth_log('vidéo envoyée');
+        out(200, array('ok' => true, 'path' => $path));
+
+    case 'storage':
+        require_login();
+        out(200, array('ok' => true, 'used' => uploads_size(), 'quota' => UPLOAD_QUOTA));
+
     case 'publish':
         if ($method !== 'POST') fail(405, 'Méthode non autorisée.');
         require_login(); require_csrf();
@@ -459,9 +506,16 @@ switch ($action) {
         $base = str_field($b, 'base');
         if (strlen($content) > 2 * 1024 * 1024 || strlen($html) > 3 * 1024 * 1024) fail(413, 'Contenu trop volumineux.');
         $decoded = json_decode($content, true);
-        if (!is_array($decoded) || !isset($decoded['hero'])) fail(400, 'Contenu invalide.');
+        if (!is_array($decoded) || !isset($decoded['sections']) || !is_array($decoded['sections'])) fail(400, 'Contenu invalide.');
         if (stripos(ltrim($html), '<!doctype html>') !== 0) fail(400, 'Page invalide.');
-        if (preg_match('#<script(?![^>]*\bsrc="assets/site\.js")#i', $html)) fail(400, 'La page contient un script non autorisé.');
+        $legal = str_field($b, 'legal');
+        foreach (array($html, $legal) as $page) {
+            if ($page === '') continue;
+            if (stripos(ltrim($page), '<!doctype html>') !== 0) fail(400, 'Page invalide.');
+            if (preg_match('#<script(?![^>]*\bsrc="assets/site\.js(\?v=[\w.-]+)?")#i', $page)) fail(400, 'La page contient un script non autorisé.');
+            if (preg_match('#<(iframe|object|embed|form)\b#i', $page)) fail(400, 'La page contient un élément non autorisé.');
+        }
+        if (strlen($legal) > 1024 * 1024) fail(413, 'Page des mentions légales trop volumineuse.');
         $current = is_file(content_path()) ? (string) file_get_contents(content_path()) : '';
         if ($current !== '' && !hash_equals(content_version($current), $base)) {
             fail(409, "Le site a été modifié par quelqu'un d'autre depuis que vous avez ouvert l'administration. Rechargez la page (vos modifications seront proposées en brouillon) puis publiez à nouveau.");
@@ -474,6 +528,7 @@ switch ($action) {
         backup_current();
         atomic_write(content_path(), $content);
         atomic_write(WWW . '/' . PAGE, $html);
+        if ($legal !== '') atomic_write(WWW . '/' . LEGAL_PAGE, $legal);
         auth_log('publication');
         out(200, array('ok' => true, 'version' => content_version($content)));
 

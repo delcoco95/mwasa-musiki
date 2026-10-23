@@ -56,6 +56,7 @@ put www/img/photos/opera-chanteuse.webp www/img/photos/opera-chanteuse.webp
 put www/img/photos/opera-logo.webp www/img/photos/opera-logo.webp
 put www/img/photos/tournage-nice.webp www/img/photos/tournage-nice.webp
 put www/img/uploads/.htaccess www/img/uploads/.htaccess
+put www/mentions-legales-initial.html www/mentions-legales-initial.html
 chmod 755 www
 chmod 755 www/admin
 chmod 755 www/assets
@@ -114,4 +115,5 @@ chmod 644 www/img/photos/opera-chanteuse.webp
 chmod 644 www/img/photos/opera-logo.webp
 chmod 644 www/img/photos/tournage-nice.webp
 chmod 644 www/img/uploads/.htaccess
+chmod 644 www/mentions-legales-initial.html
 bye

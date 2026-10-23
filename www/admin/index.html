@@ -6,8 +6,8 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Administration · Mwasa Musiki</title>
 <link rel="icon" type="image/svg+xml" href="../img/logo.svg">
-<link rel="stylesheet" href="../assets/site.css?v=2d8c575522">
-<link rel="stylesheet" href="../assets/admin/admin.css?v=2d8c575522">
+<link rel="stylesheet" href="../assets/site.css?v=01fbb3a08e">
+<link rel="stylesheet" href="../assets/admin/admin.css?v=01fbb3a08e">
 </head>
 <body class="mw-admin">
 
@@ -42,6 +42,7 @@
 <div id="bar" class="mwa-bar" hidden>
   <div class="mwa-bar-in">
     <span class="mwa-title"><b>Mwasa Musiki</b> · Administration</span>
+    <label class="mwa-view"><span class="sr">Page à modifier</span><select id="view-select"><option value="home">Page : Accueil</option><option value="legal">Page : Mentions légales</option></select></label>
     <span class="mwa-status" id="status">Aucune modification</span>
     <div class="mwa-actions">
       <button type="button" class="mwa-btn" id="help-btn">Aide</button>
@@ -56,7 +57,7 @@
 </div>
 
 <div id="tip" class="mwa-tip" hidden>
-  <b>Mode édition.</b> Cliquez sur un texte pour l'écrire, sur une photo pour la remplacer, sur un bouton ou un lien pour changer son adresse. Survolez une carte pour la déplacer, la dupliquer ou la supprimer. Rien n'est en ligne tant que vous n'avez pas cliqué sur <b>Publier</b>.
+  <b>Mode édition.</b> Cliquez sur un texte pour l'écrire, sur une photo pour la remplacer, sur un bouton ou un lien pour changer son adresse. Survolez une carte ou une section pour la déplacer, la masquer, la dupliquer ou la supprimer ; « + Ajouter une section ici » en propose de nouvelles. Rien n'est en ligne tant que vous n'avez pas cliqué sur <b>Publier</b>.
   <button type="button" id="tip-close" aria-label="Fermer l'aide">×</button>
 </div>
 
@@ -75,9 +76,10 @@
 
 <div id="toast" class="mwa-toast" role="status" aria-live="polite" hidden></div>
 <input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="vfile" accept="video/mp4,video/webm" hidden>
 
-<script src="../assets/admin/vendor/qrcode.js?v=2d8c575522"></script>
-<script src="../assets/render.js?v=2d8c575522"></script>
-<script src="../assets/admin/admin.js?v=2d8c575522"></script>
+<script src="../assets/admin/vendor/qrcode.js?v=01fbb3a08e"></script>
+<script src="../assets/render.js?v=01fbb3a08e"></script>
+<script src="../assets/admin/admin.js?v=01fbb3a08e"></script>
 </body>
 </html>

@@ -1,10 +1,11 @@
 // Génère www/accueil.html (page d'accueil) à partir de content/site.json (même code que le bouton « Publier » de l'administration).
 const fs = require('fs');
-const { fullDocument } = require('./www/assets/render.js');
+const { fullDocument, legalDocument, normalize } = require('./www/assets/render.js');
 const data = JSON.parse(fs.readFileSync(__dirname + '/www/content/site.json', 'utf8'));
 fs.writeFileSync(__dirname + '/www/accueil.html', fullDocument(data));
 // Page de secours envoyée avec le programme : affichée tant que l'administration n'a pas publié accueil.html
 fs.writeFileSync(__dirname + '/www/accueil-initial.html', fullDocument(data));
+fs.writeFileSync(__dirname + '/www/mentions-legales-initial.html', legalDocument(data));
 console.log('accueil.html généré');
 
 // Version des fichiers de l'administration : force le navigateur à charger la dernière version après chaque mise à jour.
@@ -28,7 +29,7 @@ const all = walk('www').concat([{ dir: 'www' }]).sort((a, b) => (a.dir || a.file
 const dirs = all.filter(x => x.dir).map(x => x.dir).sort((a, b) => a.split('/').length - b.split('/').length);
 const files = all.filter(x => x.file).map(x => x.file);
 // Contenus gérés par l'administration : envoyés seulement à la première installation
-const managed = f => f === 'www/accueil.html' || f === 'www/content/site.json' || (f.startsWith('www/img/uploads/') && !f.endsWith('.htaccess'));
+const managed = f => f === 'www/accueil.html' || f === 'www/mentions-legales.html' || f === 'www/content/site.json' || (f.startsWith('www/img/uploads/') && !f.endsWith('.htaccess'));
 function script(list, withEnv) {
   const L = [];
   dirs.forEach(d => L.push('-mkdir ' + d));

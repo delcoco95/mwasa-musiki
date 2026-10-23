@@ -9,301 +9,470 @@
       "href": "#adhesion"
     }
   },
-  "hero": {
-    "eyebrow": "Association culturelle · Nice",
-    "title1": "Chanter",
-    "title2": "ensemble,",
-    "title3": "voix",
-    "title4": "ouverte.",
-    "lede": "Ateliers de chant gospel collectif et individuel, travail du souffle et de la voix, initiation aux instruments de musique.",
-    "cta1": {
-      "label": "Rejoindre un atelier",
-      "href": "#adhesion"
-    },
-    "cta2": {
-      "label": "Voir les ateliers",
-      "href": "#ateliers"
-    },
-    "note": "Ouvert dès 8 ans, débutants comme confirmés",
-    "image": {
-      "src": "img/photos/opera-chanteuse.webp",
-      "alt": "Concert de Mwasa Musiki sur la scène de l'Opéra de Nice",
-      "focusX": 36,
-      "focusY": 45
-    },
-    "caption": "Concert à l'Opéra de Nice"
+  "footer": {
+    "text": "Association Mwasa Musiki · Nice",
+    "legalLabel": "Mentions légales et confidentialité",
+    "cookiesLabel": "Gestion des cookies"
   },
-  "publics": {
-    "label": "Pour qui",
-    "items": [
+  "theme": {},
+  "social": [
+    {
+      "network": "youtube",
+      "href": "https://www.youtube.com/@mwasamusiki2675"
+    },
+    {
+      "network": "facebook",
+      "href": "https://www.facebook.com/MwasaMusiki/"
+    },
+    {
+      "network": "instagram",
+      "href": "https://www.instagram.com/mwasamusiki/"
+    }
+  ],
+  "consent": {
+    "text": "Ce site ne dépose aucun cookie publicitaire ni de mesure d'audience. Les vidéos YouTube, elles, déposent des cookies de Google quand on les lance : vous pouvez les autoriser ou les refuser. Vous pourrez changer d'avis à tout moment avec le lien « Gestion des cookies » en bas de page.",
+    "accept": "Autoriser les vidéos YouTube",
+    "refuse": "Refuser"
+  },
+  "legal": {
+    "title": "Mentions légales et confidentialité",
+    "updated": "2026-10-23",
+    "sections": [
       {
-        "text": "Enfants dès 8 ans"
+        "title": "Éditeur du site",
+        "text": "Association Mwasa Musiki, association loi 1901.\nSiège social : [adresse du siège à compléter]\nNuméro RNA : [W06… à compléter]\nTéléphone : 06 10 83 42 69\nE-mail : assomwasamusiki@gmail.com"
       },
       {
-        "text": "Adolescents"
+        "title": "Directeur ou directrice de la publication",
+        "text": "[Nom de la présidente ou du président de l'association, à compléter]"
       },
       {
-        "text": "Adultes"
+        "title": "Hébergeur",
+        "text": "OVH SAS\n2 rue Kellermann, 59100 Roubaix, France\nRCS Lille Métropole 424 761 419\nTéléphone : 1007 (depuis la France)\nhttps://www.ovhcloud.com"
       },
       {
-        "text": "Seniors"
+        "title": "Propriété intellectuelle et droit à l'image",
+        "text": "Les textes, photos, vidéos et le logo de ce site appartiennent à l'association Mwasa Musiki ou sont utilisés avec l'accord de leurs auteurs. Toute reproduction sans autorisation est interdite.\n\nLes personnes photographiées ou filmées ont donné leur accord ; pour les mineurs, l'accord a été donné par leurs parents ou représentants légaux. Pour demander le retrait d'une photo ou d'une vidéo, écrivez à assomwasamusiki@gmail.com : nous la retirons dans les meilleurs délais.\n\nLes polices de caractères sont publiées sous licence SIL Open Font License 1.1."
+      },
+      {
+        "title": "Données personnelles",
+        "text": "Le site ne contient pas de formulaire : il ne collecte aucune donnée personnelle sur les visiteurs. Si vous nous écrivez par e-mail ou nous appelez, vos coordonnées servent uniquement à vous répondre et ne sont ni vendues ni transmises.\n\nLes adhésions en ligne se font sur HelloAsso, qui traite les données selon sa propre politique de confidentialité : https://www.helloasso.com/confidentialite\n\nResponsable du traitement : l'association Mwasa Musiki, joignable à assomwasamusiki@gmail.com.\n\nSécurité de l'espace d'administration : pour protéger le site contre les intrusions, la date, l'adresse IP et le navigateur utilisés lors des connexions à l'espace d'administration sont enregistrés (intérêt légitime : sécurité du site). Ces informations sont conservées au maximum 6 mois. L'hébergeur OVH conserve également des journaux techniques de connexion, selon ses propres obligations légales.\n\nVous disposez d'un droit d'accès, de rectification, d'effacement, d'opposition, de limitation et de portabilité de vos données. Pour l'exercer, écrivez à assomwasamusiki@gmail.com. Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL : https://www.cnil.fr"
+      },
+      {
+        "title": "Cookies",
+        "text": "Ce site n'utilise aucun cookie publicitaire ni de mesure d'audience.\n\nSeul l'espace d'administration, réservé aux responsables de l'association, dépose un cookie de session strictement nécessaire à la connexion ; il est dispensé de consentement.\n\nLes vidéos YouTube intégrées au site ne sont chargées qu'avec votre accord : tant que vous ne les avez pas autorisées, aucun contenu n'est demandé à YouTube et aucun cookie n'est déposé. Si vous les autorisez, Google (YouTube) peut déposer des cookies, selon sa politique : https://policies.google.com/privacy\n\nVotre choix est conservé 6 mois dans votre navigateur. Vous pouvez le modifier à tout moment avec le lien « Gestion des cookies » en bas de chaque page."
+      },
+      {
+        "title": "Liens externes",
+        "text": "Le site contient des liens vers d'autres sites (HelloAsso, réseaux sociaux, cartes). L'association n'est pas responsable de leur contenu ni de leur politique de confidentialité."
       }
     ]
   },
-  "association": {
-    "eyebrow": "L'association",
-    "title": "Mwasa Musiki",
-    "intro": "Une association culturelle niçoise qui fait de la voix un espace d'expression, de partage et d'échanges entre les cultures.",
-    "image": {
-      "src": "img/photos/groupe-association.webp",
-      "alt": "Les membres de Mwasa Musiki réunis pour une photo de groupe",
-      "focusX": 50,
-      "focusY": 55
-    },
-    "big": "Développer sa voix, sa créativité et sa confiance en soi, dans une ambiance conviviale et bienveillante.",
-    "p1": "Mwasa Musiki propose des ateliers de chant collectif gospel, des cours de chant individuel, des stages d'échauffement vocal et de travail du souffle, ainsi qu'une initiation aux instruments de musique.",
-    "p2": "Au-delà des ateliers, l'association accompagne ses adhérents dans leurs projets d'échanges culturels : concerts, festivals et salons internationaux.",
-    "meta": "Mwasa Musiki · Association culturelle · Nice Côte d'Azur"
-  },
-  "ateliers": {
-    "eyebrow": "Nos ateliers",
-    "title": "Quatre façons de faire de la musique",
-    "intro": "Chaque atelier est ouvert à tous les niveaux. On vient pour apprendre, pour progresser ou simplement pour le plaisir de chanter avec d'autres.",
-    "items": [
-      {
-        "image": {
-          "src": "img/photos/atelier-choeur.webp",
-          "alt": "Le chœur de Mwasa Musiki chante sur scène",
-          "focusX": 50,
-          "focusY": 40
-        },
-        "tag": "En groupe",
-        "title": "Chant collectif gospel",
-        "text": "Chanter à plusieurs voix, apprendre à écouter le groupe et trouver sa place dans le chœur."
+  "sections": [
+    {
+      "uid": "sg77j9wz",
+      "type": "hero",
+      "id": "accueil",
+      "hidden": false,
+      "menu": {
+        "show": false,
+        "label": "Accueil"
       },
-      {
-        "image": {
-          "src": "img/photos/atelier-solo.webp",
-          "alt": "Une chanteuse sourit au micro pendant un concert",
-          "focusX": 55,
-          "focusY": 30
+      "bg": "",
+      "data": {
+        "eyebrow": "Association culturelle · Nice",
+        "title1": "Chanter",
+        "title2": "ensemble,",
+        "title3": "voix",
+        "title4": "ouverte.",
+        "lede": "Ateliers de chant gospel collectif et individuel, travail du souffle et de la voix, initiation aux instruments de musique.",
+        "cta1": {
+          "label": "Rejoindre un atelier",
+          "href": "#adhesion"
         },
-        "tag": "Personnalisé",
-        "title": "Chant individuel",
-        "text": "Un accompagnement sur mesure pour travailler sa technique, sa justesse et son interprétation."
-      },
-      {
-        "image": {
-          "src": "img/photos/atelier-direction.webp",
-          "alt": "La cheffe de chœur dirige les chanteuses",
-          "focusX": 30,
-          "focusY": 40
+        "cta2": {
+          "label": "Voir les ateliers",
+          "href": "#ateliers"
         },
-        "tag": "Stage",
-        "title": "Souffle & voix",
-        "text": "Échauffement vocal et respiration pour poser sa voix, gagner en endurance et chanter sans se fatiguer."
-      },
-      {
+        "note": "Ouvert dès 8 ans, débutants comme confirmés",
         "image": {
-          "src": "img/photos/atelier-guitare.webp",
-          "alt": "Un guitariste accompagne un groupe de chanteuses",
-          "focusX": 55,
+          "src": "img/photos/opera-chanteuse.webp",
+          "alt": "Concert de Mwasa Musiki sur la scène de l'Opéra de Nice",
+          "focusX": 36,
           "focusY": 45
         },
-        "tag": "Découverte",
-        "title": "Initiation aux instruments",
-        "text": "Découvrir les bases d'un instrument et accompagner le chant, à son rythme."
+        "caption": "Concert à l'Opéra de Nice"
       }
-    ]
-  },
-  "projets": {
-    "eyebrow": "Projets",
-    "title": "De l'atelier à la scène",
-    "intro": "Mwasa Musiki accompagne ses adhérents dans leurs projets d'échanges culturels, pour que le travail des ateliers rencontre son public.",
-    "items": [
-      {
+    },
+    {
+      "uid": "sdxj1nx5",
+      "type": "band",
+      "id": "publics",
+      "hidden": false,
+      "menu": {
+        "show": false,
+        "label": "Pour qui"
+      },
+      "bg": "",
+      "data": {
+        "label": "Pour qui",
+        "items": [
+          {
+            "text": "Enfants dès 8 ans"
+          },
+          {
+            "text": "Adolescents"
+          },
+          {
+            "text": "Adultes"
+          },
+          {
+            "text": "Seniors"
+          }
+        ]
+      }
+    },
+    {
+      "uid": "s1fjqyxm",
+      "type": "about",
+      "id": "association",
+      "hidden": false,
+      "menu": {
+        "show": true,
+        "label": "L'association"
+      },
+      "bg": "",
+      "data": {
+        "eyebrow": "L'association",
+        "title": "Mwasa Musiki",
+        "intro": "Une association culturelle niçoise qui fait de la voix un espace d'expression, de partage et d'échanges entre les cultures.",
         "image": {
-          "src": "img/photos/opera-logo.webp",
-          "alt": "Le chœur sur la scène de l'Opéra de Nice, logo Mwasa Musiki à l'écran",
+          "src": "img/photos/groupe-association.webp",
+          "alt": "Les membres de Mwasa Musiki réunis pour une photo de groupe",
           "focusX": 50,
-          "focusY": 40
-        },
-        "title": "Concerts",
-        "text": "Monter sur scène avec le chœur ou en solo, et partager le répertoire travaillé pendant l'année."
-      },
-      {
-        "image": {
-          "src": "img/photos/cabaret-21-juin.webp",
-          "alt": "Les chanteurs de Mwasa Musiki sur scène lors de la soirée du 21 juin",
-          "focusX": 45,
-          "focusY": 40
-        },
-        "title": "Festivals",
-        "text": "Participer à des événements musicaux à Nice et ailleurs, comme la Fête de la musique."
-      },
-      {
-        "image": {
-          "src": "img/photos/tournage-nice.webp",
-          "alt": "Tournage avec des membres de Mwasa Musiki sur la promenade, à Nice",
-          "focusX": 35,
           "focusY": 55
         },
-        "title": "Salons internationaux",
-        "text": "Rencontrer d'autres artistes et d'autres cultures lors de salons et d'échanges internationaux."
+        "big": "Développer sa voix, sa créativité et sa confiance en soi, dans une ambiance conviviale et bienveillante.",
+        "p1": "Mwasa Musiki propose des ateliers de chant collectif gospel, des cours de chant individuel, des stages d'échauffement vocal et de travail du souffle, ainsi qu'une initiation aux instruments de musique.",
+        "p2": "Au-delà des ateliers, l'association accompagne ses adhérents dans leurs projets d'échanges culturels : concerts, festivals et salons internationaux.",
+        "meta": "Mwasa Musiki · Association culturelle · Nice Côte d'Azur"
       }
-    ]
-  },
-  "agenda": {
-    "eyebrow": "Agenda",
-    "title": "Prochains événements",
-    "intro": "Concerts, stages et rendez-vous de l'association. Les dates passées disparaissent automatiquement.",
-    "empty": "Aucun événement annoncé pour le moment. Revenez bientôt !",
-    "items": []
-  },
-  "actualite": {
-    "eyebrow": "Actualité",
-    "title": "Dernières nouvelles",
-    "intro": "Les temps forts de l'association, à retrouver aussi sur le Portail des associations de Nice Côte d'Azur.",
-    "items": [
-      {
-        "date": "2026-10-21",
-        "tag": "Nouveau",
-        "title": "Nouvelle actualité",
-        "text": "Racontez ce qui s'est passé ou ce qui arrive.",
-        "image": {
-          "src": "img/photos/cabaret-21-juin.webp",
-          "alt": "Les chanteurs de Mwasa Musiki sur scène",
-          "focusX": 45,
-          "focusY": 40
-        },
-        "link": {
-          "label": "",
-          "href": ""
-        }
-      },
-      {
-        "date": "2026-06-21",
-        "tag": "Open mic",
-        "title": "Faites de la musique",
-        "text": "Le 21 juin, Mwasa Musiki se joint au monde entier pour célébrer la musique à Nice, avec une scène ouverte à toutes les voix.",
-        "image": {
-          "src": "img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp",
-          "alt": "Un public en fête devant une scène de concert"
-        },
-        "link": {
-          "label": "En savoir plus",
-          "href": "https://openagenda.com/fetedelamusique2026/events/harmonie-du-monde-et-varietes-en-fete?cl=fr"
-        }
-      }
-    ]
-  },
-  "adhesion": {
-    "eyebrow": "Adhésion",
-    "title": "Rejoignez les ateliers",
-    "lead": "En adhérant, vous découvrez le plaisir de chanter et de faire de la musique avec d'autres. Les ateliers accueillent enfants à partir de 8 ans, adolescents, adultes et seniors, quel que soit leur niveau.",
-    "image": {
-      "src": "img/photos/adhesion-guitare.webp",
-      "alt": "Une jeune chanteuse accompagnée à la guitare",
-      "focusX": 55,
-      "focusY": 40
     },
-    "cardTitle": "Atelier de chant et d'initiation aux instruments",
-    "rows": [
-      {
-        "k": "Adhésion",
-        "v": "5 €"
+    {
+      "uid": "sc09kwi2",
+      "type": "cards",
+      "id": "ateliers",
+      "hidden": false,
+      "menu": {
+        "show": true,
+        "label": "Ateliers"
       },
-      {
-        "k": "Pass mensuel",
-        "v": "15 € / mois"
-      },
-      {
-        "k": "Validité",
-        "v": "Du 1er janvier 2025 au 31 décembre 2027"
-      },
-      {
-        "k": "Publics",
-        "v": "Dès 8 ans, tous niveaux"
-      },
-      {
-        "k": "Paiement",
-        "v": "En ligne, sécurisé via HelloAsso"
+      "bg": "",
+      "data": {
+        "eyebrow": "Nos ateliers",
+        "title": "Quatre façons de faire de la musique",
+        "intro": "Chaque atelier est ouvert à tous les niveaux. On vient pour apprendre, pour progresser ou simplement pour le plaisir de chanter avec d'autres.",
+        "items": [
+          {
+            "image": {
+              "src": "img/photos/atelier-choeur.webp",
+              "alt": "Le chœur de Mwasa Musiki chante sur scène",
+              "focusX": 50,
+              "focusY": 40
+            },
+            "tag": "En groupe",
+            "title": "Chant collectif gospel",
+            "text": "Chanter à plusieurs voix, apprendre à écouter le groupe et trouver sa place dans le chœur."
+          },
+          {
+            "image": {
+              "src": "img/photos/atelier-solo.webp",
+              "alt": "Une chanteuse sourit au micro pendant un concert",
+              "focusX": 55,
+              "focusY": 30
+            },
+            "tag": "Personnalisé",
+            "title": "Chant individuel",
+            "text": "Un accompagnement sur mesure pour travailler sa technique, sa justesse et son interprétation."
+          },
+          {
+            "image": {
+              "src": "img/photos/atelier-direction.webp",
+              "alt": "La cheffe de chœur dirige les chanteuses",
+              "focusX": 30,
+              "focusY": 40
+            },
+            "tag": "Stage",
+            "title": "Souffle & voix",
+            "text": "Échauffement vocal et respiration pour poser sa voix, gagner en endurance et chanter sans se fatiguer."
+          },
+          {
+            "image": {
+              "src": "img/photos/atelier-guitare.webp",
+              "alt": "Un guitariste accompagne un groupe de chanteuses",
+              "focusX": 55,
+              "focusY": 45
+            },
+            "tag": "Découverte",
+            "title": "Initiation aux instruments",
+            "text": "Découvrir les bases d'un instrument et accompagner le chant, à son rythme."
+          }
+        ]
       }
-    ],
-    "button": {
-      "label": "Adhérer sur HelloAsso",
-      "href": "https://www.helloasso.com/associations/association-mwasa-musiki/adhesions/adhesion-atelier-de-chant-et-d-initiation-aux-instruments-de-musique"
     },
-    "note": "Vous serez redirigé vers la page d'adhésion officielle de l'association."
-  },
-  "contact": {
-    "eyebrow": "Contact",
-    "title": "Une question ? Écrivez-nous",
-    "intro": "Pour un renseignement sur les ateliers, un projet de concert ou un partenariat, l'association vous répond.",
-    "items": [
-      {
-        "title": "Téléphone",
-        "text": "Appelez-nous pour un renseignement ou une inscription.",
-        "link": {
-          "label": "06 10 83 42 69",
-          "href": "tel:+33610834269"
-        }
+    {
+      "uid": "se28emft",
+      "type": "slots",
+      "id": "horaires",
+      "hidden": false,
+      "menu": {
+        "show": true,
+        "label": "Horaires"
       },
-      {
-        "title": "E-mail",
-        "text": "Écrivez-nous, nous répondons rapidement.",
+      "bg": "",
+      "data": {
+        "eyebrow": "Horaires",
+        "title": "Quand venir chanter",
+        "intro": "Les ateliers ont lieu chaque semaine dans notre salle de musique, à Nice. Vous pouvez venir essayer avant d'adhérer.",
+        "items": [
+          {
+            "title": "Chant collectif · Enfants et ados",
+            "when": "Mercredi 15h – 17h · Samedi 14h – 16h"
+          },
+          {
+            "title": "Chant collectif · Adultes et seniors",
+            "when": "Mercredi 17h – 19h · Samedi 16h – 18h"
+          },
+          {
+            "title": "Atelier piano",
+            "when": "Vendredi 17h – 18h30"
+          },
+          {
+            "title": "Atelier guitare",
+            "when": "Vendredi 19h – 20h30"
+          }
+        ],
+        "place": "Salle de musique, 114 avenue Valéry Giscard d'Estaing, 06200 Nice",
         "link": {
-          "label": "assomwasamusiki@gmail.com",
-          "href": "mailto:assomwasamusiki@gmail.com"
-        }
-      },
-      {
-        "title": "Salle de musique",
-        "text": "114 avenue Valéry Giscard d'Estaing, 06200 Nice.",
-        "link": {
-          "label": "Itinéraire",
+          "label": "Voir sur la carte",
           "href": "https://www.google.com/maps/search/?api=1&query=114+avenue+Val%C3%A9ry+Giscard+d%27Estaing+06200+Nice"
         }
-      },
-      {
-        "title": "Adhésion en ligne",
-        "text": "Toutes les campagnes d'adhésion de l'association.",
-        "link": {
-          "label": "Page HelloAsso",
-          "href": "https://www.helloasso.com/associations/association-mwasa-musiki"
-        }
       }
-    ]
-  },
-  "footer": {
-    "text": "Association Mwasa Musiki · Nice"
-  },
-  "horaires": {
-    "eyebrow": "Horaires",
-    "title": "Quand venir chanter",
-    "intro": "Les ateliers ont lieu chaque semaine dans notre salle de musique, à Nice. Vous pouvez venir essayer avant d'adhérer.",
-    "items": [
-      {
-        "title": "Chant collectif · Enfants et ados",
-        "when": "Mercredi 15h – 17h · Samedi 14h – 16h"
+    },
+    {
+      "uid": "sq5hiicf",
+      "type": "stages",
+      "id": "projets",
+      "hidden": false,
+      "menu": {
+        "show": false,
+        "label": "Projets"
       },
-      {
-        "title": "Chant collectif · Adultes et seniors",
-        "when": "Mercredi 17h – 19h · Samedi 16h – 18h"
-      },
-      {
-        "title": "Atelier piano",
-        "when": "Vendredi 17h – 18h30"
-      },
-      {
-        "title": "Atelier guitare",
-        "when": "Vendredi 19h – 20h30"
+      "bg": "",
+      "data": {
+        "eyebrow": "Projets",
+        "title": "De l'atelier à la scène",
+        "intro": "Mwasa Musiki accompagne ses adhérents dans leurs projets d'échanges culturels, pour que le travail des ateliers rencontre son public.",
+        "items": [
+          {
+            "image": {
+              "src": "img/photos/opera-logo.webp",
+              "alt": "Le chœur sur la scène de l'Opéra de Nice, logo Mwasa Musiki à l'écran",
+              "focusX": 50,
+              "focusY": 40
+            },
+            "title": "Concerts",
+            "text": "Monter sur scène avec le chœur ou en solo, et partager le répertoire travaillé pendant l'année."
+          },
+          {
+            "image": {
+              "src": "img/photos/cabaret-21-juin.webp",
+              "alt": "Les chanteurs de Mwasa Musiki sur scène lors de la soirée du 21 juin",
+              "focusX": 45,
+              "focusY": 40
+            },
+            "title": "Festivals",
+            "text": "Participer à des événements musicaux à Nice et ailleurs, comme la Fête de la musique."
+          },
+          {
+            "image": {
+              "src": "img/photos/tournage-nice.webp",
+              "alt": "Tournage avec des membres de Mwasa Musiki sur la promenade, à Nice",
+              "focusX": 35,
+              "focusY": 55
+            },
+            "title": "Salons internationaux",
+            "text": "Rencontrer d'autres artistes et d'autres cultures lors de salons et d'échanges internationaux."
+          }
+        ]
       }
-    ],
-    "place": "Salle de musique, 114 avenue Valéry Giscard d'Estaing, 06200 Nice",
-    "link": {
-      "label": "Voir sur la carte",
-      "href": "https://www.google.com/maps/search/?api=1&query=114+avenue+Val%C3%A9ry+Giscard+d%27Estaing+06200+Nice"
+    },
+    {
+      "uid": "snqxus3g",
+      "type": "agenda",
+      "id": "agenda",
+      "hidden": false,
+      "menu": {
+        "show": true,
+        "label": "Agenda"
+      },
+      "bg": "",
+      "data": {
+        "eyebrow": "Agenda",
+        "title": "Prochains événements",
+        "intro": "Concerts, stages et rendez-vous de l'association. Les dates passées disparaissent automatiquement.",
+        "empty": "Aucun événement annoncé pour le moment. Revenez bientôt !",
+        "items": []
+      }
+    },
+    {
+      "uid": "srey2ev9",
+      "type": "news",
+      "id": "actualite",
+      "hidden": false,
+      "menu": {
+        "show": true,
+        "label": "Actualité"
+      },
+      "bg": "",
+      "data": {
+        "eyebrow": "Actualité",
+        "title": "Dernières nouvelles",
+        "intro": "Les temps forts de l'association, à retrouver aussi sur le Portail des associations de Nice Côte d'Azur.",
+        "items": [
+          {
+            "date": "2026-10-21",
+            "tag": "Nouveau",
+            "title": "Nouvelle actualité",
+            "text": "Racontez ce qui s'est passé ou ce qui arrive.",
+            "image": {
+              "src": "img/photos/cabaret-21-juin.webp",
+              "alt": "Les chanteurs de Mwasa Musiki sur scène",
+              "focusX": 45,
+              "focusY": 40
+            },
+            "link": {
+              "label": "",
+              "href": ""
+            }
+          },
+          {
+            "date": "2026-06-21",
+            "tag": "Open mic",
+            "title": "Faites de la musique",
+            "text": "Le 21 juin, Mwasa Musiki se joint au monde entier pour célébrer la musique à Nice, avec une scène ouverte à toutes les voix.",
+            "image": {
+              "src": "img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp",
+              "alt": "Un public en fête devant une scène de concert"
+            },
+            "link": {
+              "label": "En savoir plus",
+              "href": "https://openagenda.com/fetedelamusique2026/events/harmonie-du-monde-et-varietes-en-fete?cl=fr"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "uid": "srp2ez7e",
+      "type": "join",
+      "id": "adhesion",
+      "hidden": false,
+      "menu": {
+        "show": false,
+        "label": "Adhésion"
+      },
+      "bg": "",
+      "data": {
+        "eyebrow": "Adhésion",
+        "title": "Rejoignez les ateliers",
+        "lead": "En adhérant, vous découvrez le plaisir de chanter et de faire de la musique avec d'autres. Les ateliers accueillent enfants à partir de 8 ans, adolescents, adultes et seniors, quel que soit leur niveau.",
+        "image": {
+          "src": "img/photos/adhesion-guitare.webp",
+          "alt": "Une jeune chanteuse accompagnée à la guitare",
+          "focusX": 55,
+          "focusY": 40
+        },
+        "cardTitle": "Atelier de chant et d'initiation aux instruments",
+        "rows": [
+          {
+            "k": "Adhésion",
+            "v": "5 €"
+          },
+          {
+            "k": "Pass mensuel",
+            "v": "15 € / mois"
+          },
+          {
+            "k": "Validité",
+            "v": "Du 1er janvier 2025 au 31 décembre 2027"
+          },
+          {
+            "k": "Publics",
+            "v": "Dès 8 ans, tous niveaux"
+          },
+          {
+            "k": "Paiement",
+            "v": "En ligne, sécurisé via HelloAsso"
+          }
+        ],
+        "button": {
+          "label": "Adhérer sur HelloAsso",
+          "href": "https://www.helloasso.com/associations/association-mwasa-musiki/adhesions/adhesion-atelier-de-chant-et-d-initiation-aux-instruments-de-musique"
+        },
+        "note": "Vous serez redirigé vers la page d'adhésion officielle de l'association."
+      }
+    },
+    {
+      "uid": "s3gb4j2s",
+      "type": "contact",
+      "id": "contact",
+      "hidden": false,
+      "menu": {
+        "show": true,
+        "label": "Contact"
+      },
+      "bg": "",
+      "data": {
+        "eyebrow": "Contact",
+        "title": "Une question ? Écrivez-nous",
+        "intro": "Pour un renseignement sur les ateliers, un projet de concert ou un partenariat, l'association vous répond.",
+        "items": [
+          {
+            "title": "Téléphone",
+            "text": "Appelez-nous pour un renseignement ou une inscription.",
+            "link": {
+              "label": "06 10 83 42 69",
+              "href": "tel:+33610834269"
+            }
+          },
+          {
+            "title": "E-mail",
+            "text": "Écrivez-nous, nous répondons rapidement.",
+            "link": {
+              "label": "assomwasamusiki@gmail.com",
+              "href": "mailto:assomwasamusiki@gmail.com"
+            }
+          },
+          {
+            "title": "Salle de musique",
+            "text": "114 avenue Valéry Giscard d'Estaing, 06200 Nice.",
+            "link": {
+              "label": "Itinéraire",
+              "href": "https://www.google.com/maps/search/?api=1&query=114+avenue+Val%C3%A9ry+Giscard+d%27Estaing+06200+Nice"
+            }
+          },
+          {
+            "title": "Adhésion en ligne",
+            "text": "Toutes les campagnes d'adhésion de l'association.",
+            "link": {
+              "label": "Page HelloAsso",
+              "href": "https://www.helloasso.com/associations/association-mwasa-musiki"
+            }
+          }
+        ]
+      }
     }
-  }
+  ],
+  "version": 3
 }

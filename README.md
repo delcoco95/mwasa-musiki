@@ -15,7 +15,11 @@ Adresse : **https://mwasamusiki.com**, hébergé chez OVH. Le site se modifie de
    - la **date** d'un événement ou d'une actualité pour la changer ;
    - survolez une **carte** pour la monter, la descendre, la dupliquer ou la supprimer ;
    - les boutons **« + Ajouter »** créent un atelier, un créneau horaire, un projet, un événement, une actualité…
-   - **Apparence** : couleurs et polices de tout le site.
+   - **Sections** : survolez une section pour la monter, la descendre, la masquer, la dupliquer ou la supprimer ; **Réglages** choisit son nom dans le menu, son adresse (#…) et sa couleur de fond ; **« + Ajouter une section ici »** propose 16 modèles (texte et photo/vidéo, galerie, vidéo, citation, appel à l'action, texte libre, cartes…) ;
+   - **Vidéos** : cliquez sur une photo → onglet « Vidéo (fichier) » (MP4/WebM, 40 Mo max., lecture automatique possible) ou « Vidéo YouTube » ;
+   - **Réseaux sociaux** : cliquez sur une icône à droite d'« Adhérer » pour changer son adresse, « + » pour en ajouter ;
+   - **Mentions légales** : liste « Page » en haut → « Mentions légales » (textes, rubriques, bandeau des cookies) ;
+   - **Apparence** : couleurs, polices et animation des notes de musique.
 4. Cliquez sur **Publier** : le site est mis à jour immédiatement.
 
 Rien n'est en ligne tant que vous n'avez pas publié. Vos modifications sont gardées sur votre appareil si vous fermez la page. Dans l'agenda, les événements passés sont masqués automatiquement.
@@ -32,6 +36,14 @@ Après 5 mots de passe faux, la connexion est bloquée 15 minutes pour l'apparei
 - **Journal** des connexions et publications : bouton **Sécurité**.
 - **Serveur** : HTTPS obligatoire (HSTS), en-têtes de sécurité stricts (CSP, anti-iframe…), aucun programme exécutable dans les dossiers de photos et de contenu, dossiers non listables, sauvegarde avant chaque publication (30 dernières dans `mwasa-data/backups/`).
 - **Compte OVH** : activez la double authentification du compte OVH (espace client → votre compte → Sécurité).
+
+## RGPD et cookies
+
+- Aucun cookie publicitaire ni de mesure d'audience ; polices, photos et vidéos envoyées sont hébergées sur le site (aucun appel à Google).
+- Les vidéos YouTube ne sont chargées qu'après l'accord du visiteur (bandeau « Autoriser / Refuser », aussi simple de refuser que d'accepter ; choix conservé 6 mois, modifiable via « Gestion des cookies » en pied de page). Elles passent par youtube-nocookie.com.
+- Le bandeau n'apparaît que si la page contient une vidéo YouTube.
+- Le journal de sécurité de l'administration (date, IP, navigateur) est conservé 6 mois au maximum.
+- **À compléter dans l'administration** (page Mentions légales) : adresse du siège, numéro RNA, nom du directeur ou de la directrice de la publication.
 
 ## Mettre le site en ligne sur OVH
 
