@@ -10,7 +10,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  var VERSION = 'r4';
+  var VERSION = 'r5';
   var MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
   var MONTHS_SHORT = ['Janv.', 'Févr.', 'Mars', 'Avril', 'Mai', 'Juin', 'Juil.', 'Août', 'Sept.', 'Oct.', 'Nov.', 'Déc.'];
   var DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
@@ -27,11 +27,12 @@
     'open-sans': { name: 'Open Sans (neutre)', family: '"Open Sans",system-ui,sans-serif', file: 'open-sans-variable.woff2', face: 'Open Sans', range: '300 800' },
     'source-sans-3': { name: 'Source Sans 3 (sobre)', family: '"Source Sans 3",system-ui,sans-serif', file: 'source-sans-3-variable.woff2', face: 'Source Sans 3', range: '200 900' }
   };
-  var THEME_DEFAULT = { creme: '#fef1e4', brun: '#6d2113', orange: '#f78138', sable: '#c2a791', nuit: '#1a130f', display: 'archivo', body: 'nunito-sans', notes: true };
+  var THEME_DEFAULT = { creme: '#fef1e4', brun: '#6d2113', orange: '#f78138', sable: '#c2a791', nuit: '#1a130f', display: 'archivo', body: 'nunito-sans', notes: true, btnBg: '', btnText: '', btnRadius: 999, textSize: 100 };
   var COLOR_KEYS = ['creme', 'brun', 'orange', 'sable', 'nuit'];
 
   /* Types de sections proposés dans l'administration */
   var SECTION_TYPES = {
+    free: { name: 'Mise en page libre', desc: 'Des blocs à placer où vous voulez (titres, textes, photos, vidéos, boutons…), sur 1 à 3 colonnes.' },
     hero: { name: 'Grand titre d\'accueil', desc: 'Titre, texte, boutons et grande photo ou vidéo.' },
     band: { name: 'Bandeau de mots', desc: 'Une courte liste sur fond coloré (ex. : publics accueillis).' },
     about: { name: 'Présentation', desc: 'Titre, photo ou vidéo et plusieurs paragraphes.' },
@@ -52,7 +53,17 @@
   var BACKGROUNDS = { '': 'Automatique', creme: 'Fond de page', surface: 'Blanc chaud', sable: 'Sable', orange: 'Accent', brun: 'Couleur principale', nuit: 'Sombre' };
   var NETWORKS = { youtube: 'YouTube', facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', linkedin: 'LinkedIn', autre: 'Autre lien' };
 
-  function themeCSS(theme, base) {
+  /* Polices choisies dans les styles des textes (pour les déclarer aussi) */
+  function styleFonts(d) {
+    var out = {};
+    (function walk(o) {
+      if (!o || typeof o !== 'object') return;
+      if (o._st && typeof o._st === 'object') Object.keys(o._st).forEach(function (k) { var f = o._st[k] && o._st[k].font; if (FONTS[f]) out[f] = 1; });
+      Object.keys(o).forEach(function (k) { if (k !== '_st') walk(o[k]); });
+    })(d);
+    return Object.keys(out);
+  }
+  function themeCSS(theme, base, d) {
     base = base || '';
     var th = {}, k;
     for (k in THEME_DEFAULT) th[k] = THEME_DEFAULT[k];
@@ -72,6 +83,11 @@
       vars.push('--f-' + role + ':' + f.family);
       used[f.file] = f;
     });
+    if (d) styleFonts(d).forEach(function (k) { used[FONTS[k].file] = FONTS[k]; });
+    if (hex.test(th.btnBg)) vars.push('--btn-bg:' + th.btnBg);
+    if (hex.test(th.btnText)) vars.push('--btn-ink:' + th.btnText);
+    var rad = +th.btnRadius; if (isFinite(rad) && rad >= 0 && rad <= 999 && rad !== 999) vars.push('--btn-radius:' + Math.round(rad) + 'px');
+    var ts = +th.textSize; if (isFinite(ts) && ts >= 80 && ts <= 130 && ts !== 100) css += 'html{font-size:' + Math.round(ts) + '%}';
     Object.keys(used).forEach(function (file) {
       var f = used[file];
       if (f.face === 'Archivo' || f.face === 'Nunito Sans') return; // déjà déclarées dans site.css
@@ -121,6 +137,37 @@
       }
       return h ? '<p>' + h + '</p>' : '';
     }).join('');
+  }
+
+  /* Style d'un élément (police, taille, couleur…), validé strictement : seules des valeurs connues passent */
+  var WEIGHTS = [300, 400, 500, 600, 700, 800, 900];
+  function styleCSS(st) {
+    if (!st || typeof st !== 'object') return '';
+    var hex = /^#[0-9a-f]{6}$/i, o = [];
+    if (FONTS[st.font]) o.push('font-family:' + FONTS[st.font].family + ';font-stretch:normal');
+    var sz = Math.round(+st.size);
+    if (sz >= 8 && sz <= 160) {
+      var lo = Math.min(sz, Math.max(16, Math.round(sz * 0.6)));
+      o.push('font-size:' + (lo < sz ? 'clamp(' + lo + 'px,' + (sz / 6.5).toFixed(2) + 'vw,' + sz + 'px)' : sz + 'px'));
+    }
+    if (WEIGHTS.indexOf(+st.weight) >= 0) o.push('font-weight:' + (+st.weight));
+    if (st.italic === true) o.push('font-style:italic');
+    if (st.underline === true) o.push('text-decoration:underline');
+    if (['uppercase', 'none', 'capitalize'].indexOf(st.case) >= 0) o.push('text-transform:' + st.case);
+    if (['left', 'center', 'right', 'justify'].indexOf(st.align) >= 0) o.push('text-align:' + st.align);
+    if (hex.test(st.color)) o.push('color:' + st.color);
+    if (hex.test(st.bg)) o.push('background:' + st.bg + ';border-color:' + st.bg);
+    var lh = +st.lh; if (st.lh !== '' && st.lh != null && lh >= 0.8 && lh <= 3) o.push('line-height:' + lh);
+    var ls = +st.ls; if (st.ls !== '' && st.ls != null && ls >= -0.1 && ls <= 0.5) o.push('letter-spacing:' + ls + 'em');
+    var rd = +st.radius; if (st.radius !== '' && st.radius != null && rd >= 0 && rd <= 60) o.push('border-radius:' + Math.round(rd) + 'px');
+    return o.join(';');
+  }
+  /* Couleurs et marges d'une section */
+  function sectionStyle(s) {
+    var st = s.style || {}, hex = /^#[0-9a-f]{6}$/i, o = [];
+    if (hex.test(st.bg)) o.push('background:' + st.bg);
+    if (hex.test(st.color)) o.push('color:' + st.color);
+    return o.join(';');
   }
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -197,6 +244,10 @@
   function newSection(type) {
     var img = function (src, alt) { return { src: src || 'img/photos/groupe-association.webp', alt: alt || '' }; };
     var data = {
+      free: { rows: [{ layout: '1-1', valign: 'center', cols: [
+        { blocks: [{ type: 'eyebrow', text: 'Sur-titre' }, { type: 'heading', level: 2, text: 'Titre de la section' }, { type: 'text', text: 'Écrivez votre texte ici.\n\nGlissez les blocs pour les déplacer, d\'une colonne ou d\'une section à l\'autre.' }, { type: 'button', variant: 'fill', link: { label: 'En savoir plus', href: '#contact' } }] },
+        { blocks: [{ type: 'media', ratio: '4-3', image: img('img/photos/atelier-choeur.webp'), caption: '' }] }
+      ] }] },
       hero: { eyebrow: 'Association culturelle · Nice', title1: 'Votre', title2: 'grand titre', title3: 'ici', title4: '.', lede: 'Une phrase d\'introduction.', cta1: { label: 'Bouton principal', href: '#contact' }, cta2: { label: '', href: '' }, note: '', image: img('img/photos/opera-chanteuse.webp'), caption: '' },
       band: { label: 'Titre', items: [{ text: 'Premier mot' }, { text: 'Deuxième mot' }] },
       about: { eyebrow: 'Sur-titre', title: 'Titre de la section', intro: 'Une phrase d\'introduction.', image: img(), big: 'Une phrase importante mise en valeur.', p1: 'Premier paragraphe.', p2: 'Deuxième paragraphe.', meta: '' },
@@ -232,26 +283,35 @@
   /* ---------- Rendu ---------- */
   function makeKit(opts) {
     var E = !!opts.edit, base = opts.base || '', resolve = opts.resolve || function (s) { return s; };
+    var root = opts.root || {};
     var K = {
-      E: E, base: base,
+      E: E, base: base, root: root,
+      /* style enregistré à côté du champ : parent._st[clé] */
+      sty: function (path, extra) {
+        var parts = String(path).split('.'), key = parts.pop(), parent = root;
+        for (var i = 0; i < parts.length && parent != null; i++) parent = parent[parts[i]];
+        var css = styleCSS(parent && parent._st && parent._st[key]);
+        if (extra) css = extra + (css ? ';' + css : '');
+        return css ? ' style="' + esc(css) + '"' : '';
+      },
       url: function (src) { var r = resolve(src); return /^(data:|blob:|https?:)/.test(r) ? r : base + r; },
       t: function (path, value, tag, cls) {
         tag = tag || 'span';
         var a = cls ? ' class="' + cls + '"' : '';
         if (E) a += ' data-edit="' + path + '"';
-        return '<' + tag + a + '>' + esc(value) + '</' + tag + '>';
+        return '<' + tag + a + K.sty(path) + '>' + esc(value) + '</' + tag + '>';
       },
       tx: function (path, value, cls, linkify) { // texte en plusieurs paragraphes
         var a = ' class="prose' + (cls ? ' ' + cls : '') + '"';
         if (E) a += ' data-textarea="' + path + '"';
-        return '<div' + a + '>' + (paragraphs(value, linkify) || (E ? '<p class="empty">Cliquez pour écrire…</p>' : '')) + '</div>';
+        return '<div' + a + K.sty(path) + '>' + (paragraphs(value, linkify) || (E ? '<p class="empty">Cliquez pour écrire…</p>' : '')) + '</div>';
       },
       ln: function (path, o, cls) {
         o = o || {};
         var h = safeHref(o.href), a = ' class="' + (cls || '') + '" href="' + esc(h) + '"';
         if (isExternal(h)) a += ' target="_blank" rel="noopener"';
         if (E) a += ' data-link="' + path + '"';
-        return '<a' + a + '>' + esc(o.label) + '</a>';
+        return '<a' + a + K.sty(path) + '>' + esc(o.label) + '</a>';
       },
       maybeLn: function (path, o, cls) { return o && (o.label || E) ? K.ln(path, o, cls) : ''; },
       list: function (path, kind) { return E ? ' data-list="' + path + '" data-kind="' + kind + '"' : ''; },
@@ -286,7 +346,110 @@
     return K;
   }
 
+  /* ---------- Blocs de la mise en page libre ---------- */
+  var BLOCK_TYPES = {
+    heading: 'Titre', eyebrow: 'Sur-titre', text: 'Texte', media: 'Photo ou vidéo', button: 'Bouton',
+    quote: 'Citation', spacer: 'Espace', divider: 'Trait de séparation'
+  };
+  var LAYOUTS = { '1': '1 colonne', '1-1': '2 colonnes égales', '2-1': '2 colonnes (grande à gauche)', '1-2': '2 colonnes (grande à droite)', '1-1-1': '3 colonnes' };
+  function newBlock(type) {
+    return ({
+      heading: { type: 'heading', level: 2, text: 'Nouveau titre' },
+      eyebrow: { type: 'eyebrow', text: 'Sur-titre' },
+      text: { type: 'text', text: 'Écrivez votre texte ici.' },
+      media: { type: 'media', ratio: '4-3', image: { src: '', alt: '' }, caption: '' },
+      button: { type: 'button', variant: 'fill', link: { label: 'Bouton', href: '#contact' } },
+      quote: { type: 'quote', text: 'Une phrase à mettre en valeur.', author: '' },
+      spacer: { type: 'spacer', size: 'm' },
+      divider: { type: 'divider' }
+    })[type] || { type: 'text', text: '' };
+  }
+  function blockHTML(K, list, i, b) {
+    var p = list + '.' + i, inner = '', E = K.E;
+    var al = ['center', 'right'].indexOf(b.align) >= 0 ? ' al-' + b.align : '';
+    switch (b.type) {
+      case 'eyebrow': inner = K.t(p + '.text', b.text, 'p', 'eyebrow'); break;
+      case 'heading':
+        var lv = [1, 2, 3, 4].indexOf(+b.level) >= 0 ? +b.level : 2;
+        inner = K.t(p + '.text', b.text, 'h' + lv, 'fb-h fb-h' + lv); break;
+      case 'text': inner = K.tx(p + '.text', b.text, '', true); break;
+      case 'media':
+        var im = b.image || {}, has = im.src || (im.video && (im.video.src || im.video.id));
+        if (!has && !E) return '';
+        var ratio = ['16-9', '4-3', '3-2', '1-1', '4-5', 'auto'].indexOf(b.ratio) >= 0 ? b.ratio : '4-3';
+        inner = '<figure class="fb-media r-' + ratio + '">' + (has ? K.media(p + '.image', im, ' loading="lazy"') :
+          '<div class="video-empty media-empty" data-img="' + p + '.image"><span>＋</span>Cliquez pour choisir une photo ou une vidéo</div>') +
+          (b.caption || E ? K.t(p + '.caption', b.caption, 'figcaption') : '') + '</figure>';
+        break;
+      case 'button':
+        var v = ['fill', 'ghost', 'dark'].indexOf(b.variant) >= 0 ? b.variant : 'fill';
+        if (!(b.link && b.link.label) && !E) return '';
+        inner = '<div class="fb-btns">' + K.ln(p + '.link', b.link || {}, 'btn btn-' + v) + '</div>'; break;
+      case 'quote':
+        inner = '<figure class="fb-quote"><blockquote>' + K.t(p + '.text', b.text, 'p') + '</blockquote>' +
+          (b.author || E ? '<figcaption>' + K.t(p + '.author', b.author) + '</figcaption>' : '') + '</figure>'; break;
+      case 'spacer': inner = '<div class="fb-spacer sp-' + (['s', 'm', 'l', 'xl'].indexOf(b.size) >= 0 ? b.size : 'm') + '">' + (E ? '<span>Espace</span>' : '') + '</div>'; break;
+      case 'divider': inner = '<hr class="fb-hr">'; break;
+      default: return '';
+    }
+    return '<div class="fb fbt-' + b.type + al + '"' + K.item(list, i) + '>' + inner + '</div>';
+  }
+  function freeHTML(K, P, f) {
+    return '<div class="wrap"><div class="free-rows">' + (f.rows || []).map(function (r, ri) {
+      var lay = LAYOUTS[r.layout] ? r.layout : '1';
+      var va = ['center', 'end'].indexOf(r.valign) >= 0 ? ' v-' + r.valign : '';
+      var n = lay.split('-').length, cols = r.cols || [];
+      var h = '';
+      for (var ci = 0; ci < n; ci++) {
+        var list = P + '.rows.' + ri + '.cols.' + ci + '.blocks';
+        h += '<div class="fcol"' + K.list(list, 'block') + '>' + ((cols[ci] && cols[ci].blocks) || []).map(function (b, bi) { return blockHTML(K, list, bi, b); }).join('') + '</div>';
+      }
+      return '<div class="frow lay-' + lay + va + '"' + (K.E ? ' data-row="' + P + '.rows.' + ri + '"' : '') + '>' + h + '</div>';
+    }).join('') + '</div></div>';
+  }
+  /* Transforme une section simple en mise en page libre (tout devient déplaçable) */
+  var CONVERTIBLE = ['hero', 'about', 'text-media', 'text', 'cta', 'quote', 'video', 'join'];
+  function toFree(sec) {
+    var d = sec.data || {}, B = function (t, o) { var b = newBlock(t); for (var k in o) b[k] = o[k]; return b; };
+    var st = function (b, src, key) { if (src && src._st && src._st[key]) { b._st = { text: src._st[key] }; } return b; };
+    var lk = function (l) { return l && l.label ? l : null; };
+    var col = function (arr) { return { blocks: arr.filter(Boolean) }; };
+    var row = function (layout, cols, valign) { return { layout: layout, valign: valign || 'start', cols: cols }; };
+    var med = function (img, ratio, cap) { return img ? B('media', { image: clone(img), ratio: ratio, caption: cap || '' }) : null; };
+    var rows = [];
+    switch (sec.type) {
+      case 'hero':
+        rows = [row('1-1', [col([d.eyebrow && st(B('eyebrow', { text: d.eyebrow }), d, 'eyebrow'), B('heading', { level: 1, text: [d.title1, d.title2, d.title3, d.title4].filter(Boolean).join(' ') }),
+          d.lede && st(B('text', { text: d.lede }), d, 'lede'), lk(d.cta1) && B('button', { variant: 'fill', link: d.cta1 }), lk(d.cta2) && B('button', { variant: 'ghost', link: d.cta2 }), d.note && B('text', { text: d.note })]),
+          col([med(d.image, '4-5', d.caption)])], 'center')]; break;
+      case 'about':
+        rows = [row('1', [col([d.eyebrow && st(B('eyebrow', { text: d.eyebrow }), d, 'eyebrow'), st(B('heading', { level: 2, text: d.title }), d, 'title'), d.intro && st(B('text', { text: d.intro }), d, 'intro')])]),
+          row('1-1', [col([med(d.image, '3-2')]), col([d.big && st(B('heading', { level: 3, text: d.big }), d, 'big'), B('text', { text: [d.p1, d.p2].filter(Boolean).join('\n\n') }), d.meta && B('text', { text: d.meta })])], 'center')]; break;
+      case 'text-media':
+        var tcol = col([d.eyebrow && st(B('eyebrow', { text: d.eyebrow }), d, 'eyebrow'), st(B('heading', { level: 2, text: d.title }), d, 'title'), st(B('text', { text: d.text }), d, 'text'), lk(d.button) && B('button', { variant: 'fill', link: d.button })]);
+        var mcol = col([med(d.image, '4-3')]);
+        rows = [row('1-1', d.reverse ? [mcol, tcol] : [tcol, mcol], 'center')]; break;
+      case 'text':
+        rows = [row('1', [col([d.eyebrow && st(B('eyebrow', { text: d.eyebrow }), d, 'eyebrow'), st(B('heading', { level: 2, text: d.title }), d, 'title'), st(B('text', { text: d.text }), d, 'text')])])]; break;
+      case 'cta':
+        rows = [row('2-1', [col([st(B('heading', { level: 2, text: d.title }), d, 'title'), d.text && st(B('text', { text: d.text }), d, 'text')]), col([lk(d.button) && B('button', { variant: 'dark', link: d.button, align: 'right' })])], 'center')];
+        if (!sec.bg && !(sec.style && sec.style.bg)) sec.bg = 'orange'; break;
+      case 'quote':
+        rows = [row('1', [col([B('quote', { text: d.text, author: d.author, align: 'center' })])])]; break;
+      case 'video':
+        rows = [row('1', [col([d.eyebrow && B('eyebrow', { text: d.eyebrow }), B('heading', { level: 2, text: d.title }), d.intro && B('text', { text: d.intro }), d.image && d.image.video ? med(d.image, '16-9') : null])])]; break;
+      case 'join':
+        rows = [row('1-1', [col([d.eyebrow && B('eyebrow', { text: d.eyebrow }), B('heading', { level: 2, text: d.title }), d.lead && B('text', { text: d.lead }), med(d.image, '3-2')]),
+          col([d.cardTitle && B('heading', { level: 3, text: d.cardTitle }), B('text', { text: (d.rows || []).map(function (r) { return r.k + ' : ' + r.v; }).join('\n') }), lk(d.button) && B('button', { variant: 'fill', link: d.button }), d.note && B('text', { text: d.note })])], 'center')];
+        if (!sec.bg && !(sec.style && sec.style.bg)) sec.bg = 'brun'; break;
+      default: return false;
+    }
+    sec.type = 'free'; sec.data = { rows: rows };
+    return true;
+  }
+
   var RENDERERS = {
+    free: freeHTML,
     hero: function (K, P, he) {
       return '<div class="wrap"><div>' + K.t(P + '.eyebrow', he.eyebrow, 'p', 'eyebrow') +
         '<h1>' + K.t(P + '.title1', he.title1, 'span', 'b') + '<br>' + K.t(P + '.title2', he.title2) + '<br>' +
@@ -410,6 +573,7 @@
   };
   /* Balise et classes de chaque type de section (pour garder l'apparence existante) */
   var WRAPPERS = {
+    free: ['section', 'block'],
     hero: ['section', 'hero'], band: ['div', 'ages'], about: ['section', 'block'], 'text-media': ['section', 'block'],
     cards: ['section', 'block cards-sec'], stages: ['section', 'block projects'], gallery: ['section', 'block'], video: ['section', 'block'],
     slots: ['section', 'block horaires'], agenda: ['section', 'block agenda-wrap'], news: ['section', 'block'],
@@ -473,9 +637,11 @@
     if (!R) return '';
     if (s.hidden && !K.E) return '';
     var w = WRAPPERS[s.type] || ['section', 'block'];
-    var plain = ['about', 'text-media', 'cards', 'gallery', 'video', 'slots', 'news', 'text', 'contact'].indexOf(s.type) >= 0 && (!s.bg || s.bg === 'creme');
-    var cls = 'sec sec-' + s.type + ' ' + w[1] + (s.bg ? ' bg-' + s.bg : '') + (plain ? ' plain' : '') + (s.hidden ? ' sec-hidden' : '');
-    var attrs = ' id="' + esc(s.id) + '" class="' + cls + '"' + (K.E ? ' data-section="' + i + '"' : '');
+    var sst = s.style || {}, css = sectionStyle(s);
+    var plain = ['free', 'about', 'text-media', 'cards', 'gallery', 'video', 'slots', 'news', 'text', 'contact'].indexOf(s.type) >= 0 && (!s.bg || s.bg === 'creme') && !/^#/.test(sst.bg || '');
+    var pad = ['s', 'm', 'l', '0'].indexOf(sst.pad) >= 0 ? ' pad-' + sst.pad : '';
+    var cls = 'sec sec-' + s.type + ' ' + w[1] + (s.bg ? ' bg-' + s.bg : '') + (plain ? ' plain' : '') + (/^#/.test(sst.color || '') ? ' tc' : '') + pad + (s.hidden ? ' sec-hidden' : '');
+    var attrs = ' id="' + esc(s.id) + '" class="' + cls + '"' + (css ? ' style="' + esc(css) + '"' : '') + (K.E ? ' data-section="' + i + '"' : '');
     if (w[0] === 'div' && s.type === 'band') attrs += ' role="region" aria-label="' + esc(s.data.label || 'Bandeau') + '"';
     return '<' + w[0] + attrs + '>' + R(K, 'sections.' + i + '.data', s.data || {}) + '</' + w[0] + '>';
   }
@@ -484,9 +650,10 @@
   function render(data, opts) {
     opts = opts || {};
     var d = normalize(data);
+    opts.root = d;
     var K = makeKit(opts);
     var h = [];
-    if (!opts.noTheme) h.push('<style id="mw-theme">' + themeCSS(d.theme, K.base) + '</style>');
+    if (!opts.noTheme) h.push('<style id="mw-theme">' + themeCSS(d.theme, K.base, d) + '</style>');
     h.push('<span id="top"></span>');
     h.push(header(K, d, true));
     h.push('<main id="contenu">' + d.sections.map(function (s, i) { return sectionHTML(K, s, i); }).join('\n') + '</main>');
@@ -499,9 +666,10 @@
   function renderLegal(data, opts) {
     opts = opts || {};
     var d = normalize(data);
+    opts.root = d;
     var K = makeKit(opts), L = d.legal;
     var h = [];
-    if (!opts.noTheme) h.push('<style id="mw-theme">' + themeCSS(d.theme, K.base) + '</style>');
+    if (!opts.noTheme) h.push('<style id="mw-theme">' + themeCSS(d.theme, K.base, d) + '</style>');
     h.push('<span id="top"></span>');
     h.push(header(K, d, false));
     h.push('<main id="contenu" class="legal"><div class="wrap narrow">' + K.t('legal.title', L.title, 'h1') +
@@ -530,7 +698,7 @@
       '<meta property="og:image" content="' + esc(image || 'img/logo.png') + '">\n<meta property="og:locale" content="fr_FR">\n' +
       '<link rel="icon" type="image/svg+xml" href="img/logo.svg">\n' +
       '<link rel="preload" href="assets/fonts/archivo-variable.woff2" as="font" type="font/woff2" crossorigin>\n' +
-      '<link rel="stylesheet" href="assets/site.css?v=' + VERSION + '">\n<style id="mw-theme">' + themeCSS(d.theme, '') + '</style>\n</head>\n<body>\n' +
+      '<link rel="stylesheet" href="assets/site.css?v=' + VERSION + '">\n<style id="mw-theme">' + themeCSS(d.theme, '', d) + '</style>\n</head>\n<body>\n' +
       '<!-- Page générée automatiquement depuis content/site.json par l\'administration. Modifiez le contenu sur /admin/. -->\n';
   }
   var docEnd = '\n<script src="assets/site.js?v=' + VERSION + '" defer></script>\n</body>\n</html>\n';
@@ -549,6 +717,7 @@
   return {
     VERSION: VERSION, render: render, renderLegal: renderLegal, fullDocument: fullDocument, legalDocument: legalDocument,
     normalize: normalize, newSection: newSection, themeCSS: themeCSS, youtubeId: youtubeId, slugify: slugify,
+    styleCSS: styleCSS, newBlock: newBlock, toFree: toFree, BLOCK_TYPES: BLOCK_TYPES, LAYOUTS: LAYOUTS, CONVERTIBLE: CONVERTIBLE,
     FONTS: FONTS, THEME_DEFAULT: THEME_DEFAULT, SECTION_TYPES: SECTION_TYPES, BACKGROUNDS: BACKGROUNDS, NETWORKS: NETWORKS,
     esc: esc, longDate: longDate, parseDate: parseDate
   };

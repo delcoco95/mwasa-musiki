@@ -514,6 +514,8 @@ switch ($action) {
             if (stripos(ltrim($page), '<!doctype html>') !== 0) fail(400, 'Page invalide.');
             if (preg_match('#<script(?![^>]*\bsrc="assets/site\.js(\?v=[\w.-]+)?")#i', $page)) fail(400, 'La page contient un script non autorisé.');
             if (preg_match('#<(iframe|object|embed|form)\b#i', $page)) fail(400, 'La page contient un élément non autorisé.');
+            // styles des textes : uniquement des valeurs simples (pas d'adresse, d'import ni d'expression)
+            if (preg_match('#\sstyle="[^"]*(url\s*\(|expression|@import|javascript:|\\\\)#i', $page)) fail(400, 'La page contient un style non autorisé.');
         }
         if (strlen($legal) > 1024 * 1024) fail(413, 'Page des mentions légales trop volumineuse.');
         $current = is_file(content_path()) ? (string) file_get_contents(content_path()) : '';

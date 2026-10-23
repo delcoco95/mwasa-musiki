@@ -283,7 +283,7 @@
   var COLOR_LABELS = [['creme', 'Fond de page'], ['brun', 'Couleur principale'], ['orange', 'Couleur d\'accent'], ['sable', 'Couleur secondaire'], ['nuit', 'Texte et pied de page']];
   function applyTheme() {
     var st = document.getElementById('mw-theme');
-    if (st) st.textContent = R.themeCSS(state.data.theme, '../');
+    if (st) st.textContent = R.themeCSS(state.data.theme, '../', state.data);
   }
   function editTheme() {
     var before = clone(state.data.theme || {});
@@ -299,6 +299,10 @@
       }).join('') + '</div>' +
       '<div class="mwa-field"><label for="f-display">Police des titres</label><select id="f-display">' + opts('display') + '</select></div>' +
       '<div class="mwa-field"><label for="f-body">Police du texte</label><select id="f-body">' + opts('body') + '</select></div>' +
+      '<div class="mwa-field"><label for="f-tsize">Taille du texte de tout le site : <span id="f-tsize-v">' + (th.textSize || 100) + ' %</span></label><input type="range" id="f-tsize" min="85" max="120" step="5" value="' + (th.textSize || 100) + '"></div>' +
+      '<h3 class="mwa-sub">Boutons</h3>' +
+      colorPick('f-btnbg', 'Couleur des boutons', th.btnBg, th.orange) + colorPick('f-btntx', 'Couleur du texte des boutons', th.btnText, th.nuit) +
+      '<div class="mwa-field"><label for="f-btnrad">Forme des boutons</label><select id="f-btnrad">' + [[999, 'Pilule (bords ronds)'], [12, 'Arrondis'], [6, 'Légèrement arrondis'], [0, 'Carrés']].map(function (o) { return '<option value="' + o[0] + '"' + (+th.btnRadius === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select></div>' +
       '<label class="mwa-check"><input type="checkbox" id="f-notes"' + (th.notes !== false ? ' checked' : '') + '> Notes de musique animées sur le côté droit quand on fait défiler la page</label>' +
       '<p class="mwa-note">Les changements s\'affichent tout de suite dans la page derrière. Le logo garde ses couleurs d\'origine. Pensez à un bon contraste entre le texte et le fond.</p>' +
       '<button type="button" class="mwa-btn" id="f-reset-theme">Revenir aux couleurs et polices d\'origine</button>',
@@ -308,17 +312,380 @@
       th.display = document.getElementById('f-display').value;
       th.body = document.getElementById('f-body').value;
       th.notes = document.getElementById('f-notes').checked;
+      th.textSize = +document.getElementById('f-tsize').value; document.getElementById('f-tsize-v').textContent = th.textSize + ' %';
+      th.btnBg = colorVal('f-btnbg'); th.btnText = colorVal('f-btntx'); th.btnRadius = +document.getElementById('f-btnrad').value;
       applyTheme();
     };
+    wireColorPicks();
     $('pop-body').querySelectorAll('input, select').forEach(function (el) { el.addEventListener('input', live); el.addEventListener('change', live); });
+    sidePop();
     document.getElementById('f-reset-theme').addEventListener('click', function () {
       Object.assign(th, R.THEME_DEFAULT);
       COLOR_LABELS.forEach(function (c) { document.getElementById('c-' + c[0]).value = th[c[0]]; });
       document.getElementById('f-display').value = th.display; document.getElementById('f-body').value = th.body; document.getElementById('f-notes').checked = true;
+      document.getElementById('f-tsize').value = 100; document.getElementById('f-tsize-v').textContent = '100 %'; document.getElementById('f-btnrad').value = 999;
+      ['f-btnbg', 'f-btntx'].forEach(function (id) { document.getElementById(id + '-on').checked = false; });
       applyTheme();
     });
     state._themeBefore = before;
   }
+  /* ---------- Choix d'une couleur (case « personnalisée » + nuancier) ---------- */
+  function swatches() {
+    var th = Object.assign({}, R.THEME_DEFAULT, state.data.theme || {});
+    var out = [];
+    ['brun', 'orange', 'sable', 'creme', 'nuit'].forEach(function (k) { if (out.indexOf(th[k]) < 0) out.push(th[k]); });
+    ['#ffffff', '#000000', '#2563eb', '#1f7a4d', '#c0392b'].forEach(function (c) { if (out.indexOf(c) < 0) out.push(c); });
+    return out;
+  }
+  function colorPick(id, label, value, fallback) {
+    return '<div class="mwa-field mwa-colorfield"><label class="mwa-check"><input type="checkbox" id="' + id + '-on"' + (value ? ' checked' : '') + '> ' + label + '</label>' +
+      '<div class="mwa-colorline"><input type="color" id="' + id + '" value="' + R.esc(value || fallback || '#6d2113') + '" aria-label="' + R.esc(label) + '">' +
+      swatches().map(function (c) { return '<button type="button" class="mwa-sw" data-for="' + id + '" data-c="' + c + '" style="background:' + c + '" title="' + c + '" aria-label="Couleur ' + c + '"></button>'; }).join('') + '</div></div>';
+  }
+  function colorVal(id) { var on = document.getElementById(id + '-on'); return on && on.checked ? document.getElementById(id).value : ''; }
+  function wireColorPicks() {
+    var body = $('pop-body');
+    body.querySelectorAll('.mwa-sw').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var inp = document.getElementById(b.dataset.for); inp.value = b.dataset.c;
+        document.getElementById(b.dataset.for + '-on').checked = true;
+        inp.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
+    body.querySelectorAll('.mwa-colorfield input[type=color]').forEach(function (inp) {
+      inp.addEventListener('input', function () { document.getElementById(inp.id + '-on').checked = true; });
+    });
+  }
+  /* Fenêtre sur le côté, sans assombrir la page : on voit le résultat en direct */
+  function sidePop() { $('pop').classList.add('mwa-side'); $('pop-backdrop').classList.add('mwa-clear'); }
+
+  /* ---------- Mise en forme d'un texte ou d'un bouton ---------- */
+  var STYLE_WEIGHTS = [['', 'Par défaut'], ['300', 'Fin'], ['400', 'Normal'], ['500', 'Moyen'], ['600', 'Semi-gras'], ['700', 'Gras'], ['800', 'Très gras'], ['900', 'Noir (le plus épais)']];
+  function selectField(id, label, options, value) {
+    return '<div class="mwa-field"><label for="' + id + '">' + label + '</label><select id="' + id + '">' + options.map(function (o) {
+      return '<option value="' + R.esc(o[0]) + '"' + (String(value) === String(o[0]) ? ' selected' : '') + '>' + R.esc(o[1]) + '</option>';
+    }).join('') + '</select></div>';
+  }
+  function numField(id, label, value, min, max, step, ph) {
+    return '<div class="mwa-field"><label for="' + id + '">' + label + '</label><input type="number" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" placeholder="' + (ph || 'auto') + '" value="' + (value === undefined || value === null ? '' : R.esc(value)) + '"></div>';
+  }
+  function editStyle(path, isLink) {
+    var parts = path.split('.'), key = parts.pop(), parent = getPath(state.data, parts.join('.'));
+    if (!parent || typeof parent !== 'object') return;
+    var before = parent._st ? clone(parent._st) : undefined;
+    var st = Object.assign({}, (parent._st && parent._st[key]) || {});
+    var el = document.querySelector('[data-edit="' + path + '"],[data-textarea="' + path + '"],[data-link="' + path + '"]');
+    var natural = el ? Math.round(parseFloat(getComputedStyle(el.matches('[data-textarea]') && el.querySelector('p') ? el.querySelector('p') : el).fontSize)) : 18;
+    var fonts = [['', 'Police d\'origine']].concat(Object.keys(R.FONTS).map(function (k) { return [k, R.FONTS[k].name]; }));
+    openPop(isLink ? 'Mise en forme du bouton' : 'Mise en forme du texte',
+      selectField('s-font', 'Police', fonts, st.font || '') +
+      '<div class="mwa-field"><label for="s-size">Taille du texte (en pixels)</label><div class="mwa-rangeline"><input type="range" id="s-size-r" min="10" max="120" value="' + (st.size || natural) + '" aria-label="Taille"><input type="number" id="s-size" min="8" max="160" placeholder="' + natural + '" value="' + (st.size || '') + '"></div>' +
+      '<small>Vide = taille d\'origine (' + natural + ' px). Les très grands textes sont réduits automatiquement sur téléphone.</small></div>' +
+      selectField('s-weight', 'Épaisseur', STYLE_WEIGHTS, st.weight || '') +
+      '<div class="mwa-row mwa-checks"><label class="mwa-check"><input type="checkbox" id="s-italic"' + (st.italic ? ' checked' : '') + '> <i>Italique</i></label>' +
+      '<label class="mwa-check"><input type="checkbox" id="s-underline"' + (st.underline ? ' checked' : '') + '> <u>Souligné</u></label></div>' +
+      colorPick('s-color', isLink ? 'Couleur du texte du bouton' : 'Couleur du texte', st.color, '#6d2113') +
+      (isLink ? colorPick('s-bg', 'Couleur de fond du bouton', st.bg, '#f78138') + numField('s-radius', 'Arrondi des coins (0 = carré, 30 = très rond)', st.radius, 0, 60, 1) : '') +
+      selectField('s-case', 'Majuscules', [['', 'Par défaut'], ['uppercase', 'TOUT EN MAJUSCULES'], ['none', 'Comme je l\'ai écrit'], ['capitalize', 'Première Lettre De Chaque Mot']], st.case || '') +
+      selectField('s-align', 'Alignement', [['', 'Par défaut'], ['left', 'À gauche'], ['center', 'Centré'], ['right', 'À droite'], ['justify', 'Justifié']], st.align || '') +
+      '<div class="mwa-row mwa-two">' + numField('s-lh', 'Interligne', st.lh, 0.8, 3, 0.05, 'ex. 1.5') + numField('s-ls', 'Espacement des lettres', st.ls, -0.1, 0.5, 0.01, 'ex. 0.05') + '</div>' +
+      '<button type="button" class="mwa-btn" id="s-reset">Revenir au style d\'origine</button>',
+      function () { state._onCancel = null; markChanged(); return true; }, 'Appliquer');
+    sidePop();
+    state._onCancel = function () { if (before === undefined) delete parent._st; else parent._st = before; renderPreview(); };
+    var raf = 0;
+    var read = function () {
+      var g = function (id) { var x = document.getElementById(id); return x ? x.value.trim() : ''; };
+      var o = {};
+      if (g('s-font')) o.font = g('s-font');
+      if (g('s-size') !== '') o.size = Math.max(8, Math.min(160, Math.round(+g('s-size'))));
+      if (g('s-weight')) o.weight = +g('s-weight');
+      if (document.getElementById('s-italic').checked) o.italic = true;
+      if (document.getElementById('s-underline').checked) o.underline = true;
+      if (colorVal('s-color')) o.color = colorVal('s-color');
+      if (isLink && colorVal('s-bg')) o.bg = colorVal('s-bg');
+      if (isLink && g('s-radius') !== '') o.radius = +g('s-radius');
+      if (g('s-case')) o.case = g('s-case');
+      if (g('s-align')) o.align = g('s-align');
+      if (g('s-lh') !== '') o.lh = +g('s-lh');
+      if (g('s-ls') !== '') o.ls = +g('s-ls');
+      parent._st = parent._st || {};
+      if (Object.keys(o).length) parent._st[key] = o; else delete parent._st[key];
+      if (!Object.keys(parent._st).length) delete parent._st;
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(renderPreview);
+    };
+    wireColorPicks();
+    var body = $('pop-body');
+    body.querySelectorAll('input, select').forEach(function (x) { x.addEventListener('input', read); x.addEventListener('change', read); });
+    document.getElementById('s-size-r').addEventListener('input', function () { document.getElementById('s-size').value = this.value; read(); });
+    document.getElementById('s-size').addEventListener('input', function () { if (this.value) document.getElementById('s-size-r').value = this.value; });
+    document.getElementById('s-reset').addEventListener('click', function () {
+      body.querySelectorAll('select').forEach(function (x) { x.value = ''; });
+      body.querySelectorAll('input[type=number]').forEach(function (x) { x.value = ''; });
+      body.querySelectorAll('input[type=checkbox]').forEach(function (x) { x.checked = false; });
+      document.getElementById('s-size-r').value = natural;
+      read();
+    });
+  }
+  /* Bouton flottant « Aa Style » au-dessus du texte ou du bouton survolé */
+  var styleBtn = null, styleTarget = null;
+  function setupStyleButton() {
+    styleBtn = document.createElement('button');
+    styleBtn.type = 'button'; styleBtn.className = 'mwa-stylebtn'; styleBtn.hidden = true;
+    styleBtn.innerHTML = '<b aria-hidden="true">Aa</b> Style';
+    styleBtn.title = 'Police, taille, couleur, alignement…';
+    document.body.appendChild(styleBtn);
+    var show = function (el) {
+      styleTarget = el;
+      var r = el.getBoundingClientRect();
+      styleBtn.hidden = false;
+      styleBtn.style.top = Math.max(0, window.scrollY + r.top - 30) + 'px';
+      styleBtn.style.left = (window.scrollX + Math.max(4, Math.min(r.left, document.documentElement.clientWidth - 96))) + 'px';
+    };
+    var pick = function (e) {
+      if (e.target.closest('.mwa-ctrl, .mwa-secbar, .mwa-rowbar, .mwa-add, .mwa-addsec, .mwa-addrow')) return;
+      var el = e.target.closest('[data-edit],[data-textarea],[data-link]');
+      if (el) show(el);
+    };
+    $('preview').addEventListener('mouseover', pick);
+    $('preview').addEventListener('focusin', pick);
+    styleBtn.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    styleBtn.addEventListener('click', function () {
+      if (!styleTarget || !document.body.contains(styleTarget)) { styleBtn.hidden = true; return; }
+      var path = styleTarget.dataset.edit || styleTarget.dataset.textarea || styleTarget.dataset.link;
+      if (styleTarget.dataset.edit) styleTarget.blur();
+      editStyle(path, !!styleTarget.dataset.link);
+    });
+  }
+
+  /* ---------- Blocs de la mise en page libre ---------- */
+  function pickBlock(listPath) {
+    var T = R.BLOCK_TYPES, desc = { heading: 'Un titre (4 tailles)', eyebrow: 'Un petit texte au-dessus d\'un titre', text: 'Un ou plusieurs paragraphes', media: 'Une photo, une vidéo envoyée ou YouTube', button: 'Un bouton avec un lien', quote: 'Une phrase mise en valeur', spacer: 'Un espace vide', divider: 'Une ligne horizontale' };
+    openPop('Ajouter un bloc', '<div class="mwa-types">' + Object.keys(T).map(function (k) {
+      return '<button type="button" class="mwa-type" data-block="' + k + '"><b>' + R.esc(T[k]) + '</b><span>' + R.esc(desc[k] || '') + '</span></button>';
+    }).join('') + '</div>', function () { return true; }, 'Fermer');
+    $('pop-cancel').hidden = true;
+    $('pop-body').querySelectorAll('[data-block]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var arr = ensureList(listPath);
+        arr.push(R.newBlock(b.dataset.block));
+        closePop(); $('pop-cancel').hidden = false;
+        markChanged(); renderPreview();
+        var el = document.querySelector('[data-item="' + listPath + '.' + (arr.length - 1) + '"]');
+        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        toast('Bloc ajouté. Cliquez dessus pour le remplir, glissez la poignée ⠿ pour le déplacer.', 'ok', 6000);
+      });
+    });
+  }
+  function ensureList(path) {
+    var parts = path.split('.'), o = state.data;
+    for (var i = 0; i < parts.length; i++) {
+      var k = parts[i];
+      if (o[k] == null) o[k] = (i === parts.length - 1 || /^\d+$/.test(parts[i + 1])) ? [] : {};
+      if (Array.isArray(o[k]) && i < parts.length - 1 && /^\d+$/.test(parts[i + 1])) {
+        var idx = +parts[i + 1];
+        while (o[k].length <= idx) o[k].push({ blocks: [] });
+      }
+      o = o[k];
+    }
+    return o;
+  }
+  function blockSettings(path) {
+    var b = getPath(state.data, path);
+    var html = selectField('b-align', 'Alignement du bloc', [['', 'À gauche'], ['center', 'Centré'], ['right', 'À droite']], b.align || '');
+    if (b.type === 'heading') html += selectField('b-level', 'Taille du titre', [['1', 'Très grand (titre principal)'], ['2', 'Grand'], ['3', 'Moyen'], ['4', 'Petit']], b.level || 2);
+    if (b.type === 'media') html += selectField('b-ratio', 'Format de la photo ou vidéo', [['16-9', 'Paysage large (16:9)'], ['4-3', 'Paysage (4:3)'], ['3-2', 'Photo (3:2)'], ['1-1', 'Carré'], ['4-5', 'Portrait'], ['auto', 'Format d\'origine']], b.ratio || '4-3');
+    if (b.type === 'button') html += selectField('b-variant', 'Apparence du bouton', [['fill', 'Plein (couleur d\'accent)'], ['ghost', 'Contour'], ['dark', 'Foncé']], b.variant || 'fill');
+    if (b.type === 'spacer') html += selectField('b-size', 'Hauteur de l\'espace', [['s', 'Petit'], ['m', 'Moyen'], ['l', 'Grand'], ['xl', 'Très grand']], b.size || 'm');
+    html += '<p class="mwa-note">Pour la police, la taille ou la couleur du texte : survolez le texte et cliquez sur « Aa Style ».</p>';
+    openPop('Réglages du bloc : ' + (R.BLOCK_TYPES[b.type] || ''), html, function () {
+      var v = function (id) { var x = document.getElementById(id); return x ? x.value : null; };
+      b.align = v('b-align') || undefined; if (!b.align) delete b.align;
+      if (v('b-level')) b.level = +v('b-level');
+      if (v('b-ratio')) b.ratio = v('b-ratio');
+      if (v('b-variant')) b.variant = v('b-variant');
+      if (v('b-size')) b.size = v('b-size');
+      markChanged(); renderPreview(); return true;
+    });
+  }
+  /* Liste de toutes les colonnes de toutes les mises en page libres (pour « Déplacer vers… ») */
+  function allColumns() {
+    var out = [];
+    state.data.sections.forEach(function (sec, si) {
+      if (sec.type !== 'free') return;
+      var name = (sec.menu && sec.menu.label) || sec.id;
+      (sec.data.rows || []).forEach(function (r, ri) {
+        var n = String(r.layout || '1').split('-').length;
+        for (var ci = 0; ci < n; ci++) out.push({ path: 'sections.' + si + '.data.rows.' + ri + '.cols.' + ci + '.blocks', label: 'Section ' + (si + 1) + ' « ' + name + ' » · ligne ' + (ri + 1) + ' · colonne ' + (ci + 1) });
+      });
+    });
+    return out;
+  }
+  function moveBlockTo(fromList, idx) {
+    var cols = allColumns();
+    openPop('Déplacer le bloc vers…', selectField('m-dest', 'Destination (le bloc est placé à la fin)', cols.map(function (c) { return [c.path, c.label]; }), fromList) +
+      '<p class="mwa-note">Sur ordinateur, vous pouvez aussi attraper la poignée ⠿ et glisser le bloc où vous voulez.</p>', function () {
+      var src = getPath(state.data, fromList), dst = ensureList(document.getElementById('m-dest').value);
+      var item = src.splice(idx, 1)[0]; dst.push(item);
+      markChanged(); renderPreview(); toast('Bloc déplacé.', 'ok'); return true;
+    }, 'Déplacer');
+  }
+  /* Lignes : nombre de colonnes, alignement vertical */
+  function setLayout(row, lay) {
+    var n = lay.split('-').length;
+    row.cols = row.cols || [];
+    while (row.cols.length < n) row.cols.push({ blocks: [] });
+    if (row.cols.length > n) {
+      var extra = row.cols.splice(n);
+      extra.forEach(function (c) { row.cols[n - 1].blocks = (row.cols[n - 1].blocks || []).concat(c.blocks || []); });
+    }
+    row.layout = lay;
+  }
+  function decorateRows(root) {
+    root.querySelectorAll('[data-row]').forEach(function (rowEl) {
+      var rp = rowEl.dataset.row, row = getPath(state.data, rp);
+      var rowsPath = rp.slice(0, rp.lastIndexOf('.')), rows = getPath(state.data, rowsPath), ri = +rp.slice(rp.lastIndexOf('.') + 1);
+      var bar = document.createElement('div'); bar.className = 'mwa-rowbar'; bar.contentEditable = 'false';
+      bar.innerHTML = '<span class="lbl">Ligne ' + (ri + 1) + '</span>' +
+        '<select aria-label="Colonnes">' + Object.keys(R.LAYOUTS).map(function (k) { return '<option value="' + k + '"' + ((row.layout || '1') === k ? ' selected' : '') + '>' + R.esc(R.LAYOUTS[k]) + '</option>'; }).join('') + '</select>' +
+        '<select aria-label="Alignement vertical" data-v>' + [['start', 'Aligné en haut'], ['center', 'Centré verticalement'], ['end', 'Aligné en bas']].map(function (o) { return '<option value="' + o[0] + '"' + ((row.valign || 'start') === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') + '</select>';
+      bar.querySelector('select').addEventListener('change', function () { setLayout(row, this.value); markChanged(); renderPreview(); });
+      bar.querySelector('[data-v]').addEventListener('change', function () { row.valign = this.value; markChanged(); renderPreview(); });
+      var btn = function (label, title, fn, cls) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = title; b.setAttribute('aria-label', title);
+        if (cls) b.className = cls;
+        b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); fn(); });
+        bar.appendChild(b);
+      };
+      if (ri > 0) btn('↑', 'Monter la ligne', function () { move(rowsPath, ri, -1); });
+      if (ri < rows.length - 1) btn('↓', 'Descendre la ligne', function () { move(rowsPath, ri, 1); });
+      btn('⧉', 'Dupliquer la ligne', function () { rows.splice(ri + 1, 0, clone(row)); markChanged(); renderPreview(); });
+      btn('Supprimer', 'Supprimer la ligne et ses blocs', function () {
+        var n = (row.cols || []).reduce(function (a, c) { return a + ((c.blocks || []).length); }, 0);
+        if (!n) { rows.splice(ri, 1); markChanged(); renderPreview(); return; }
+        openPop('Supprimer la ligne ?', '<p>Cette ligne contient ' + n + ' bloc(s). Les supprimer aussi ? Rien n\'est définitif tant que vous n\'avez pas publié.</p>', function () { rows.splice(ri, 1); markChanged(); renderPreview(); return true; }, 'Supprimer', true);
+      }, 'del');
+      rowEl.insertBefore(bar, rowEl.firstChild);
+    });
+    root.querySelectorAll('.free-rows').forEach(function (fr) {
+      var sec = fr.closest('[data-section]'); if (!sec) return;
+      var rowsPath = 'sections.' + sec.dataset.section + '.data.rows';
+      var w = document.createElement('div'); w.className = 'mwa-addrow';
+      w.innerHTML = '<span>Ajouter une ligne :</span>';
+      Object.keys(R.LAYOUTS).forEach(function (k) {
+        var b = document.createElement('button'); b.type = 'button'; b.textContent = R.LAYOUTS[k];
+        b.addEventListener('click', function () {
+          var rows = ensureList(rowsPath), row = { layout: '1', valign: 'start', cols: [{ blocks: [] }] };
+          setLayout(row, k); rows.push(row); markChanged(); renderPreview();
+          toast('Ligne ajoutée. Utilisez « + Ajouter un bloc » dans chaque colonne.', 'ok');
+        });
+        w.appendChild(b);
+      });
+      fr.appendChild(w);
+    });
+  }
+
+  /* ---------- Glisser-déposer : blocs, cartes, éléments de listes, sections ---------- */
+  var drag = null, dropLine = null;
+  function clearDrop() {
+    if (dropLine) dropLine.hidden = true;
+    document.querySelectorAll('.mwa-drop-into').forEach(function (x) { x.classList.remove('mwa-drop-into'); });
+  }
+  function acceptsList(list) { return drag && drag.list && (list.dataset.list === drag.list || (drag.kind === 'block' && list.dataset.kind === 'block')); }
+  function findDrop(e) {
+    if (!drag) return null;
+    if (drag.section != null) {
+      var se = e.target.closest('[data-section]');
+      if (!se) {
+        // au-dessus d'un bouton « + Ajouter une section ici » : entre les deux sections voisines
+        var gap = e.target.closest('.mwa-addsec'); if (!gap) return null;
+        var nx = gap.nextElementSibling;
+        if (nx && nx.dataset.section != null) return { section: +nx.dataset.section, el: nx, after: false, horiz: false };
+        var pv = gap.previousElementSibling;
+        if (pv && pv.dataset.section != null) return { section: +pv.dataset.section + 1, el: pv, after: true, horiz: false };
+        return null;
+      }
+      var rr = se.getBoundingClientRect(), after = e.clientY > rr.top + rr.height / 2;
+      return { section: +se.dataset.section + (after ? 1 : 0), el: se, after: after, horiz: false };
+    }
+    var it = e.target.closest('[data-item]'), list = null;
+    while (it) {
+      list = it.parentElement && it.parentElement.closest('[data-list]');
+      if (list && acceptsList(list) && it.dataset.item.slice(0, list.dataset.list.length + 1) === list.dataset.list + '.') break;
+      it = it.parentElement && it.parentElement.closest('[data-item]'); list = null;
+    }
+    if (it && list) {
+      var lp = list.dataset.list, idx = +it.dataset.item.slice(lp.length + 1);
+      var r = it.getBoundingClientRect(), lr = list.getBoundingClientRect();
+      var horiz = r.width < lr.width * 0.7;
+      var aft = horiz ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2;
+      return { list: lp, idx: idx + (aft ? 1 : 0), el: it, after: aft, horiz: horiz };
+    }
+    list = e.target.closest('[data-list]');
+    while (list && !acceptsList(list)) list = list.parentElement && list.parentElement.closest('[data-list]');
+    if (list) return { list: list.dataset.list, idx: (getPath(state.data, list.dataset.list) || []).length, el: list, into: true };
+    return null;
+  }
+  function showDrop(t) {
+    clearDrop();
+    if (t.into) { t.el.classList.add('mwa-drop-into'); return; }
+    if (!dropLine) { dropLine = document.createElement('div'); dropLine.className = 'mwa-dropline'; document.body.appendChild(dropLine); }
+    var r = t.el.getBoundingClientRect();
+    dropLine.hidden = false;
+    if (t.horiz) {
+      dropLine.style.cssText = 'top:' + (window.scrollY + r.top) + 'px;left:' + (window.scrollX + (t.after ? r.right : r.left) - 2) + 'px;width:4px;height:' + r.height + 'px';
+    } else {
+      dropLine.style.cssText = 'left:' + (window.scrollX + r.left) + 'px;top:' + (window.scrollY + (t.after ? r.bottom : r.top) - 2) + 'px;height:4px;width:' + r.width + 'px';
+    }
+  }
+  function doDrop(t) {
+    if (drag.section != null) {
+      var secs = state.data.sections, from = drag.section, to = t.section;
+      if (to > from) to--;
+      if (to === from) return;
+      var s = secs.splice(from, 1)[0]; secs.splice(to, 0, s);
+      markChanged(); renderPreview(); toast('Section déplacée.', 'ok'); return;
+    }
+    var src = getPath(state.data, drag.list), dst = ensureList(t.list), to2 = t.idx;
+    if (!src || !dst) return;
+    if (src === dst) { if (to2 > drag.idx) to2--; if (to2 === drag.idx) return; }
+    var item = src.splice(drag.idx, 1)[0]; dst.splice(to2, 0, item);
+    markChanged(); renderPreview(); toast(drag.kind === 'block' ? 'Bloc déplacé.' : 'Élément déplacé.', 'ok');
+  }
+  function setupDnD() {
+    var p = $('preview');
+    p.addEventListener('dragstart', function (e) {
+      var h = e.target.closest && e.target.closest('.mwa-drag');
+      if (!h) return;
+      if (h.dataset.secHandle != null) {
+        drag = { section: +h.dataset.secHandle };
+        var se = h.closest('[data-section]'); if (se) se.classList.add('mwa-dragging');
+      } else {
+        var it = h.closest('[data-item]'), list = it && it.parentElement.closest('[data-list]');
+        if (!it || !list) return;
+        drag = { list: list.dataset.list, kind: list.dataset.kind, idx: +it.dataset.item.slice(list.dataset.list.length + 1) };
+        it.classList.add('mwa-dragging');
+        try { e.dataTransfer.setDragImage(it, 24, 24); } catch (x) {}
+      }
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', 'mwasa'); } catch (x) {}
+      document.body.classList.add('mwa-is-dragging');
+    });
+    // défilement automatique quand on approche du haut ou du bas de l'écran pendant un glisser
+    document.addEventListener('dragover', function (e) {
+      if (!drag) return;
+      var edge = 90, h = window.innerHeight;
+      if (e.clientY < edge) window.scrollBy(0, -Math.ceil((edge - e.clientY) / 3));
+      else if (e.clientY > h - edge) window.scrollBy(0, Math.ceil((e.clientY - (h - edge)) / 3));
+    });
+    p.addEventListener('dragover', function (e) { var t = findDrop(e); if (!t) { clearDrop(); return; } e.preventDefault(); e.dataTransfer.dropEffect = 'move'; showDrop(t); });
+    p.addEventListener('drop', function (e) { var t = findDrop(e); clearDrop(); if (!t) return; e.preventDefault(); var d = drag; doDrop(t); drag = d && null; });
+    document.addEventListener('dragend', function () {
+      clearDrop(); drag = null; document.body.classList.remove('mwa-is-dragging');
+      document.querySelectorAll('.mwa-dragging').forEach(function (x) { x.classList.remove('mwa-dragging'); });
+    });
+  }
+
   /* ---------- Brouillon local ---------- */
   function saveDraft() {
     try {
@@ -367,6 +734,7 @@
     var y = window.scrollY;
     var opts = { edit: true, base: '../', resolve: resolveImg };
     p.innerHTML = state.view === 'legal' ? R.renderLegal(state.data, opts) : R.render(state.data, opts);
+    if (styleBtn) styleBtn.hidden = true;
     decorate(p);
     window.scrollTo(0, y);
   }
@@ -384,7 +752,7 @@
     social: function () { return { network: 'autre', href: 'https://' }; },
     legal: function () { return { title: 'Nouvelle rubrique', text: 'Texte de la rubrique.' }; }
   };
-  var ADD_LABEL = { public: '+ Public', atelier: '+ Ajouter un atelier', projet: '+ Ajouter un projet', event: '+ Ajouter un événement', news: '+ Ajouter une actualité', contact: '+ Ajouter un contact', row: '+ Ajouter une ligne', slot: '+ Ajouter un créneau', photo: '+ Ajouter une photo ou vidéo', social: '+', legal: '+ Ajouter une rubrique' };
+  var ADD_LABEL = { public: '+ Public', atelier: '+ Ajouter un atelier', projet: '+ Ajouter un projet', event: '+ Ajouter un événement', news: '+ Ajouter une actualité', contact: '+ Ajouter un contact', row: '+ Ajouter une ligne', slot: '+ Ajouter un créneau', photo: '+ Ajouter une photo ou vidéo', social: '+', legal: '+ Ajouter une rubrique', block: '+ Ajouter un bloc' };
 
   function decorate(root) {
     // Textes
@@ -418,6 +786,7 @@
     // Sections : barre d'outils et ajout entre les sections
     if (state.view === 'home') decorateSections(root);
     // Contrôles des listes
+    if (state.view === 'home') decorateRows(root);
     root.querySelectorAll('[data-list]').forEach(function (list) {
       var path = list.dataset.list, kind = list.dataset.kind;
       var items = getPath(state.data, path) || [];
@@ -431,14 +800,23 @@
           b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); fn(); });
           c.appendChild(b);
         };
+        var h = document.createElement('button'); h.type = 'button'; h.className = 'mwa-drag'; h.draggable = true; h.textContent = '⠿';
+        h.title = 'Attraper et glisser pour déplacer'; h.setAttribute('aria-label', h.title);
+        h.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); });
+        c.appendChild(h);
         if (idx > 0) btn('↑', 'Monter', function () { move(path, idx, -1); });
         if (idx < items.length - 1) btn('↓', 'Descendre', function () { move(path, idx, 1); });
+        if (kind === 'block') {
+          btn('⚙', 'Réglages du bloc (alignement, taille, format…)', function () { blockSettings(path + '.' + idx); });
+          btn('⇄', 'Déplacer vers une autre colonne ou section', function () { moveBlockTo(path, idx); });
+        }
         btn('⧉', 'Dupliquer', function () { items.splice(idx + 1, 0, clone(items[idx])); markChanged(); renderPreview(); });
         btn('Supprimer', 'Supprimer', function () { confirmDelete(path, idx); }, 'del');
         it.appendChild(c);
       });
       var add = document.createElement('button');
       add.type = 'button'; add.className = 'mwa-add'; add.textContent = ADD_LABEL[kind] || '+ Ajouter';
+      if (kind === 'block') { add.addEventListener('click', function () { pickBlock(path); }); list.appendChild(add); return; }
       add.addEventListener('click', function () {
         var arr = getPath(state.data, path);
         var fresh = TEMPLATES[kind] ? TEMPLATES[kind]() : clone(arr[arr.length - 1] || {});
@@ -466,7 +844,7 @@
       var i = +el.dataset.section, sec = secs[i];
       var bar = document.createElement('div'); bar.className = 'mwa-secbar'; bar.contentEditable = 'false';
       var info = R.SECTION_TYPES[sec.type] ? R.SECTION_TYPES[sec.type].name : sec.type;
-      bar.innerHTML = '<span class="lbl">' + R.esc(info) + (sec.hidden ? ' · masquée' : '') + '</span>';
+      bar.innerHTML = '<button type="button" class="mwa-drag" draggable="true" data-sec-handle="' + i + '" title="Attraper et glisser pour déplacer la section" aria-label="Déplacer la section">⠿</button><span class="lbl">' + R.esc(info) + (sec.hidden ? ' · masquée' : '') + '</span>';
       var btn = function (label, title, fn, cls) {
         var b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.title = title; b.setAttribute('aria-label', title);
         if (cls) b.className = cls;
@@ -475,7 +853,8 @@
       };
       if (i > 0) btn('↑', 'Monter la section', function () { moveSection(i, -1); });
       if (i < secs.length - 1) btn('↓', 'Descendre la section', function () { moveSection(i, 1); });
-      btn('Réglages', 'Réglages de la section (menu, ancre, fond)', function () { sectionSettings(i); });
+      btn('Réglages', 'Réglages de la section (menu, couleurs, marges)', function () { sectionSettings(i); });
+      if (R.CONVERTIBLE.indexOf(sec.type) >= 0) btn('Rendre libre', 'Transformer en mise en page libre : chaque élément devient un bloc déplaçable', function () { convertSection(i); });
       btn(sec.hidden ? 'Afficher' : 'Masquer', sec.hidden ? 'Afficher la section sur le site' : 'Masquer la section sans la supprimer', function () { sec.hidden = !sec.hidden; markChanged(); renderPreview(); });
       btn('⧉', 'Dupliquer la section', function () {
         var c = clone(sec); c.uid = 's' + Math.random().toString(36).slice(2, 9); c.id = sec.id + '-2'; c.menu.show = false;
@@ -524,6 +903,10 @@
       field('f-menulabel', 'Nom dans le menu', sec.menu.label || '') +
       field('f-anchor', 'Adresse de la section', sec.id, 'text', 'Utilisée dans les liens : #' + R.esc(sec.id) + '. Lettres, chiffres et tirets.') +
       '<div class="mwa-field"><label for="f-bg">Couleur de fond</label><select id="f-bg">' + bgs + '</select></div>' +
+      colorPick('f-sbg', 'Autre couleur de fond (au choix)', (sec.style || {}).bg, '#fef1e4') +
+      colorPick('f-scol', 'Couleur des textes de la section', (sec.style || {}).color, '#1a130f') +
+      selectField('f-pad', 'Espace en haut et en bas', [['', 'Normal'], ['0', 'Aucun'], ['s', 'Petit'], ['m', 'Moyen'], ['l', 'Grand']], (sec.style || {}).pad || '') +
+      (R.CONVERTIBLE.indexOf(sec.type) >= 0 ? '<button type="button" class="mwa-btn" id="f-tofree">Transformer en mise en page libre (tout devient déplaçable)</button>' : '') +
       (sec.type === 'text-media' ? '<label class="mwa-check"><input type="checkbox" id="f-rev"' + (sec.data.reverse ? ' checked' : '') + '> Photo à gauche, texte à droite</label>' : ''),
       function () {
         var id = R.slugify(val('f-anchor'));
@@ -537,15 +920,32 @@
         sec.id = id;
         sec.menu = { show: document.getElementById('f-menu').checked, label: val('f-menulabel') || sec.menu.label };
         sec.bg = document.getElementById('f-bg').value;
+        var stl = { bg: colorVal('f-sbg'), color: colorVal('f-scol'), pad: document.getElementById('f-pad').value };
+        Object.keys(stl).forEach(function (k) { if (!stl[k]) delete stl[k]; });
+        if (Object.keys(stl).length) sec.style = stl; else delete sec.style;
         var rev = document.getElementById('f-rev'); if (rev) sec.data.reverse = rev.checked;
         markChanged(); renderPreview(); return true;
       });
+    wireColorPicks();
+    var tf = document.getElementById('f-tofree');
+    if (tf) tf.addEventListener('click', function () { closePop(); convertSection(i); });
+  }
+  function convertSection(i) {
+    var sec = state.data.sections[i];
+    openPop('Rendre la section libre ?', '<p>Chaque élément de la section « ' + R.esc((sec.menu && sec.menu.label) || sec.id) + ' » (titre, texte, photo, bouton…) devient un bloc que vous pourrez déplacer, dans la section ou vers une autre, et mettre en forme.</p>' +
+      '<p class="mwa-note">L\'apparence peut changer un peu. Si le résultat ne vous plaît pas, « Annuler les modifications » en haut revient à la version publiée.</p>', function () {
+      R.toFree(sec); markChanged(); renderPreview();
+      toast('Section transformée : glissez la poignée ⠿ de chaque bloc pour le déplacer.', 'ok', 7000);
+      return true;
+    }, 'Transformer');
   }
   function editTextarea(path) {
     var v = getPath(state.data, path) || '';
     openPop('Texte', '<div class="mwa-field"><label for="f-text">Texte</label><textarea id="f-text" rows="12">' + R.esc(v) + '</textarea>' +
-      '<small>Laissez une ligne vide pour commencer un nouveau paragraphe. Les adresses web et e-mails deviennent des liens dans les mentions légales et les textes libres.</small></div>',
+      '<small>Laissez une ligne vide pour commencer un nouveau paragraphe. Les adresses web et e-mails deviennent des liens dans les mentions légales et les textes libres.</small></div>' +
+      '<button type="button" class="mwa-btn" id="f-style">Aa  Mise en forme (police, taille, couleur…)</button>',
       function () { setPath(state.data, path, document.getElementById('f-text').value.replace(/\r/g, '').trim()); markChanged(); renderPreview(); return true; });
+    document.getElementById('f-style').addEventListener('click', function () { setPath(state.data, path, document.getElementById('f-text').value.replace(/\r/g, '').trim()); markChanged(); renderPreview(); editStyle(path, false); });
   }
   function editSocial(i) {
     var s = state.data.social[i];
@@ -584,11 +984,11 @@
     var socEl = e.target.closest('[data-social]');
     var linkEl = e.target.closest('[data-link]');
     var evEl = e.target.closest('[data-event]');
-    if (e.target.closest('.mwa-ctrl, .mwa-add, .mwa-secbar, .mwa-addsec')) return;
+    if (e.target.closest('.mwa-ctrl, .mwa-add, .mwa-secbar, .mwa-addsec, .mwa-rowbar, .mwa-addrow')) return;
     if (socEl) { e.preventDefault(); editSocial(+socEl.dataset.social); return; }
     if (taEl) { e.preventDefault(); editTextarea(taEl.dataset.textarea); return; }
     if (e.target.closest('#burger')) { var m = document.getElementById('menu'); m.classList.toggle('open'); return; }
-    if (imgEl) { e.preventDefault(); if (imgEl.classList.contains('video-empty')) editYouTube(imgEl.dataset.img); else editMedia(imgEl.dataset.img); return; }
+    if (imgEl) { e.preventDefault(); if (imgEl.classList.contains('media-empty')) editImage(imgEl.dataset.img); else if (imgEl.classList.contains('video-empty')) editYouTube(imgEl.dataset.img); else editMedia(imgEl.dataset.img); return; }
     if (e.target.closest('[data-consent-open]')) { e.preventDefault(); return; }
     if (linkEl) { e.preventDefault(); editLink(linkEl.dataset.link); return; }
     if (evEl) { e.preventDefault(); editDate(evEl.dataset.event); return; }
@@ -620,7 +1020,7 @@
     $('pop').hidden = false; $('pop-backdrop').hidden = false;
     var f = $('pop-body').querySelector('input, textarea, button'); if (f) setTimeout(function () { f.focus(); }, 30);
   }
-  function closePop() { $('pop').hidden = true; $('pop-backdrop').hidden = true; popSubmit = null; }
+  function closePop() { $('pop').hidden = true; $('pop-backdrop').hidden = true; popSubmit = null; $('pop').classList.remove('mwa-side'); $('pop-backdrop').classList.remove('mwa-clear'); }
   function field(id, label, value, type, hint) {
     return '<div class="mwa-field"><label for="' + id + '">' + label + '</label>' +
       (type === 'textarea' ? '<textarea id="' + id + '" rows="3">' + R.esc(value) + '</textarea>' : '<input id="' + id + '" type="' + (type || 'text') + '" value="' + R.esc(value) + '">') +
@@ -632,16 +1032,19 @@
     var l = getPath(state.data, path) || { label: '', href: '' };
     openPop('Bouton ou lien',
       field('f-label', 'Texte affiché', l.label) +
-      field('f-href', 'Adresse', l.href, 'text', 'Une adresse web (https://…), ou #adhesion, #contact… pour aller à une section de la page. Laissez le texte vide pour masquer le lien.'),
+      field('f-href', 'Adresse', l.href, 'text', 'Une adresse web (https://…), ou #adhesion, #contact… pour aller à une section de la page. Laissez le texte vide pour masquer le lien.') +
+      '<button type="button" class="mwa-btn" id="f-style">Aa  Mise en forme (couleur du bouton, police, taille…)</button>',
       function () {
         var href = val('f-href');
         if (href && !/^(https?:\/\/|mailto:|tel:|#)/i.test(href)) {
           if (/^[\w.-]+\.[a-z]{2,}/i.test(href)) href = 'https://' + href;
           else { toast('Adresse non reconnue : commencez par https://', 'err'); return false; }
         }
-        setPath(state.data, path, { label: val('f-label'), href: href });
+        var keep = getPath(state.data, path) || {};
+        setPath(state.data, path, Object.assign({}, keep, { label: val('f-label'), href: href }));
         markChanged(); renderPreview(); return true;
       });
+    document.getElementById('f-style').addEventListener('click', function () { editStyle(path, true); });
   }
 
   function editDate(path) {
@@ -678,7 +1081,7 @@
   function editMedia(path) {
     var o = getPath(state.data, path) || {};
     var kind = o.video ? o.video.kind : 'photo';
-    if (kind === 'file') editVideoFile(path); else if (kind === 'youtube' || !o.src) editYouTube(path); else editImage(path);
+    if (kind === 'file') editVideoFile(path); else if (kind === 'youtube') editYouTube(path); else editImage(path);
   }
   function editYouTube(path) {
     var o = getPath(state.data, path);
@@ -747,7 +1150,7 @@
     var fx = o.focusX != null ? +o.focusX : 50, fy = o.focusY != null ? +o.focusY : 50;
     var shown = document.querySelector('[data-img="' + path + '"]');
     var ratio = shown && shown.clientWidth && shown.clientHeight ? (shown.clientWidth / shown.clientHeight) : 1.5;
-    var u = R.esc(imgURL(o.src));
+    var u = o.src ? R.esc(imgURL(o.src)) : '';
     openPop('Photo ou vidéo', mediaTabs('photo') +
       (o.video ? '<p class="mwa-warn">Cet emplacement affiche actuellement une vidéo. Pour afficher une photo à la place, utilisez « Retirer la vidéo ».</p><button type="button" class="mwa-btn mwa-danger" id="f-novideo">Retirer la vidéo</button>' : '') +
       '<div class="mwa-field"><label>Cadrage : cliquez sur la partie à garder visible</label>' +
@@ -928,6 +1331,7 @@
     $('code').addEventListener('input', function () { if ($('code').value.replace(/\D/g, '').length === 6) $('code-form').requestSubmit(); });
     $('code-back').addEventListener('click', function () { showLogin(''); });
     $('preview').addEventListener('click', onPreviewClick);
+    setupStyleButton(); setupDnD();
     $('publish-btn').addEventListener('click', publish);
     $('discard-btn').addEventListener('click', discard);
     $('logout-btn').addEventListener('click', function () {
@@ -944,11 +1348,14 @@
         '<li><b>Cartes et listes</b> : survolez-les pour monter, descendre, dupliquer ou supprimer. Les boutons « + Ajouter » créent un nouvel élément.</li>' +
         '<li><b>Cadrage d\'une photo</b> : cliquez sur la photo puis sur la partie à garder visible.</li>' +
         '<li><b>Vidéo</b> : cliquez sur une photo puis choisissez l\'onglet « Vidéo (fichier) » ou « Vidéo YouTube ».</li>' +
-        '<li><b>Sections</b> : survolez une section pour la monter, la descendre, la masquer, la dupliquer ou la supprimer. « Réglages » choisit son nom dans le menu et sa couleur de fond. « + Ajouter une section ici » propose 16 modèles.</li>' +
+        '<li><b>Sections</b> : survolez une section pour la monter, la descendre (ou la glisser avec ⠿), la masquer, la dupliquer ou la supprimer. « Réglages » choisit son nom dans le menu, ses couleurs et ses marges. « + Ajouter une section ici » propose 17 modèles.</li>' +
+        '<li><b>Déplacer</b> : attrapez la poignée ⠿ d\'un bloc, d\'une carte ou d\'un élément et glissez-le où vous voulez (une ligne bleue montre l\'endroit). Les blocs passent d\'une colonne ou d\'une section libre à l\'autre. Sur téléphone : flèches ↑ ↓ et bouton ⇄.</li>' +
+        '<li><b>Mise en page libre</b> : section faite de lignes (1 à 3 colonnes) et de blocs (titre, texte, photo, vidéo, bouton, citation, espace, trait). « Rendre libre » transforme une section simple en blocs déplaçables.</li>' +
+        '<li><b>Mise en forme</b> : survolez un texte ou un bouton et cliquez sur « Aa Style » pour changer police, taille, épaisseur, couleur, couleur du bouton, majuscules, alignement, interligne.</li>' +
         '<li><b>Textes longs</b> : cliquez dessus pour les modifier dans une fenêtre (ligne vide = nouveau paragraphe).</li>' +
         '<li><b>Réseaux sociaux</b> : cliquez sur une icône en haut à droite pour changer son adresse.</li>' +
         '<li><b>Mentions légales</b> : choisissez « Mentions légales » dans la liste « Page » en haut.</li>' +
-        '<li><b>Apparence</b> : changez les couleurs et les polices de tout le site.</li>' +
+        '<li><b>Apparence</b> : couleurs, polices, taille du texte et boutons de tout le site.</li>' +
         '<li><b>Agenda</b> : les événements passés sont masqués automatiquement sur le site.</li>' +
         '<li><b>Publier</b> met le site à jour immédiatement. Une sauvegarde de la version précédente est gardée sur le serveur.</li></ul>', function () { return true; }, 'Compris');
       $('pop-cancel').hidden = true;
@@ -956,17 +1363,19 @@
     $('tip-close').addEventListener('click', function () { $('tip').hidden = true; sset('local', 'mwasa_tip_seen', '1'); });
     $('pop').addEventListener('submit', function (e) {
       e.preventDefault();
-      if (!popSubmit || popSubmit() !== false) { state._themeBefore = undefined; closePop(); $('pop-cancel').hidden = false; }
+      if (!popSubmit || popSubmit() !== false) { state._themeBefore = undefined; state._onCancel = null; closePop(); $('pop-cancel').hidden = false; }
     });
     var cancelPop = function () {
       if (state.security && state.security.mustChangePassword && $('pop-title').textContent === 'Choisissez votre mot de passe') return;
       state._newImage = null;
       if (state._themeBefore !== undefined && $('pop-title').textContent === 'Apparence du site') { state.data.theme = state._themeBefore; applyTheme(); }
       state._themeBefore = undefined;
+      if (state._onCancel) { var oc = state._onCancel; state._onCancel = null; oc(); }
       closePop(); $('pop-cancel').hidden = false;
     };
     $('pop-cancel').addEventListener('click', cancelPop);
-    $('pop-backdrop').addEventListener('click', cancelPop);
+    // fenêtre latérale (mise en forme, apparence) : cliquer sur la page garde les réglages
+    $('pop-backdrop').addEventListener('click', function () { if ($('pop').classList.contains('mwa-side')) { if ($('pop').requestSubmit) $('pop').requestSubmit(); else $('pop-ok').click(); } else cancelPop(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('pop').hidden) cancelPop(); });
     $('file').addEventListener('change', onFile);
     $('vfile').addEventListener('change', onVideoFile);

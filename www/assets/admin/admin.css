@@ -174,3 +174,50 @@
 .mwa-preview .consent-edit { margin-top: 3rem; border: 2px dashed var(--line); border-radius: 8px; padding: 1.2rem; display: flex; flex-direction: column; gap: .8rem; }
 .mwa-preview .consent-edit h2 { font-size: 1.1rem; text-transform: uppercase; }
 .mwa-pop textarea { font: inherit; line-height: 1.5; width: 100%; resize: vertical; }
+
+/* ===================== Mise en forme, blocs, glisser-déposer ===================== */
+.mwa-pop img[src=""]{visibility:hidden}
+.mwa-stylebtn{position:absolute;z-index:150;font:800 .78rem var(--f-body);background:var(--mwa-blue);color:#fff;border:0;border-radius:6px;padding:.35rem .6rem;cursor:pointer;box-shadow:0 6px 16px -6px rgba(0,0,0,.4);line-height:1;white-space:nowrap}
+.mwa-stylebtn b{font-family:Georgia,serif;font-size:.95rem;margin-right:.15rem}
+.mwa-stylebtn:hover{background:#1d4ed8}
+.mwa-pop.mwa-side{left:auto;right:12px;top:12px;bottom:12px;transform:none;width:min(94vw,24rem);max-height:none}
+.mwa-backdrop.mwa-clear{background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none}
+@media (max-width:640px){.mwa-pop.mwa-side{left:0;right:0;top:auto;bottom:0;width:100%;max-height:55vh;border-radius:14px 14px 0 0}}
+.mwa-sub{font-size:1rem;font-weight:900;text-transform:uppercase;margin:.4rem 0 0}
+.mwa-colorline{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
+.mwa-colorline input[type=color]{width:2.6rem;height:2.1rem;padding:0;border:2px solid var(--line);border-radius:6px;background:#fff;cursor:pointer}
+.mwa-sw{width:1.6rem;height:1.6rem;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);cursor:pointer;padding:0}
+.mwa-sw:hover{transform:scale(1.12)}
+.mwa-rangeline{display:flex;gap:.6rem;align-items:center}
+.mwa-rangeline input[type=range]{flex:1}
+.mwa-rangeline input[type=number]{width:5.2rem}
+.mwa-two>.mwa-field{flex:1 1 9rem}
+.mwa-field input[type=number]{font:inherit;padding:.5rem .6rem;border:2px solid var(--line);border-radius:7px}
+.mwa-checks{gap:1.2rem}
+/* poignées */
+.mwa-drag{cursor:grab!important;font-size:.95rem!important;letter-spacing:-.1em}
+.mwa-drag:active{cursor:grabbing!important}
+.mwa-dragging{opacity:.35}
+.mwa-dropline{position:absolute;z-index:160;background:var(--mwa-blue);border-radius:3px;pointer-events:none;box-shadow:0 0 0 3px rgba(37,99,235,.25)}
+.mwa-drop-into{outline:3px dashed var(--mwa-blue)!important;outline-offset:4px;background:rgba(37,99,235,.06)}
+/* mise en page libre dans l'éditeur */
+.mwa-preview .frow{position:relative;padding-top:2.4rem;outline:1px dashed rgba(37,99,235,.25);outline-offset:8px;border-radius:4px}
+.mwa-preview .fcol{min-height:5rem;outline:1px dashed rgba(26,19,15,.18);outline-offset:4px;border-radius:4px;padding-bottom:.2rem}
+.mwa-preview .fcol>.mwa-add{min-height:2.6rem;padding:.5rem;font-size:.82rem;opacity:.55}
+.mwa-preview .fcol>.mwa-add:hover{opacity:1}
+.mwa-preview .fb{border-radius:4px}
+.mwa-preview .fb:hover{box-shadow:0 0 0 1px rgba(37,99,235,.35)}
+.mwa-preview .fb>.mwa-ctrl{top:-.9rem;right:0}
+.mwa-preview .fb-spacer{background:repeating-linear-gradient(45deg,transparent 0 6px,rgba(37,99,235,.08) 6px 12px);display:flex;align-items:center;justify-content:center;min-height:1.4rem}
+.mwa-preview .fb-spacer span{font:700 .7rem var(--f-body);opacity:.5;text-transform:uppercase}
+.mwa-rowbar{position:absolute;top:0;left:0;z-index:7;display:flex;flex-wrap:wrap;gap:.25rem;align-items:center;opacity:.35;transition:opacity .12s}
+.frow:hover>.mwa-rowbar,.mwa-rowbar:focus-within{opacity:1}
+@media (hover:none){.mwa-rowbar{opacity:1}}
+.mwa-rowbar .lbl{background:#0f766e;color:#fff;font:800 .7rem var(--f-body);text-transform:uppercase;padding:.35rem .5rem;border-radius:5px}
+.mwa-rowbar select{font:600 .75rem var(--f-body);padding:.25rem .3rem;border-radius:5px;border:1px solid rgba(0,0,0,.25);background:#fff;color:#1a130f;max-width:13rem}
+.mwa-rowbar button{font:700 .75rem var(--f-body);border:0;border-radius:5px;background:rgba(26,19,15,.88);color:#fff;padding:.33rem .5rem;cursor:pointer;line-height:1}
+.mwa-rowbar button:hover{background:var(--mwa-blue)}.mwa-rowbar button.del:hover{background:#c0392b}
+.mwa-addrow{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;justify-content:center;padding:.6rem;border:2px dashed rgba(15,118,110,.45);border-radius:8px;font:700 .8rem var(--f-body);color:#0f766e}
+.mwa-addrow button{font:700 .76rem var(--f-body);border:1px solid #0f766e;color:#0f766e;background:#fff;border-radius:99px;padding:.3rem .65rem;cursor:pointer}
+.mwa-addrow button:hover{background:#0f766e;color:#fff}
+.mwa-secbar .mwa-drag{background:rgba(26,19,15,.9)}

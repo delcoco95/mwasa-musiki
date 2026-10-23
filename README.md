@@ -15,11 +15,14 @@ Adresse : **https://mwasamusiki.com**, hébergé chez OVH. Le site se modifie de
    - la **date** d'un événement ou d'une actualité pour la changer ;
    - survolez une **carte** pour la monter, la descendre, la dupliquer ou la supprimer ;
    - les boutons **« + Ajouter »** créent un atelier, un créneau horaire, un projet, un événement, une actualité…
-   - **Sections** : survolez une section pour la monter, la descendre, la masquer, la dupliquer ou la supprimer ; **Réglages** choisit son nom dans le menu, son adresse (#…) et sa couleur de fond ; **« + Ajouter une section ici »** propose 16 modèles (texte et photo/vidéo, galerie, vidéo, citation, appel à l'action, texte libre, cartes…) ;
+   - **Sections** : survolez une section pour la monter, la descendre ou la glisser (poignée ⠿), la masquer, la dupliquer ou la supprimer ; **Réglages** choisit son nom dans le menu, son adresse (#…), sa couleur de fond (au choix), la couleur de ses textes et ses marges ; **« + Ajouter une section ici »** propose 17 modèles ;
+   - **Mise en page libre** : une section faite de lignes (1 à 3 colonnes) et de blocs (titre, sur-titre, texte, photo/vidéo, bouton, citation, espace, trait). Chaque bloc se glisse avec sa poignée ⠿ dans une autre colonne ou une autre section libre (ou bouton ⇄ sur téléphone) ; ⚙ règle son alignement, sa taille ou son format. **« Rendre libre »** transforme une section simple (accueil, présentation, texte, texte et photo, vidéo, citation, appel à l'action, adhésion) en blocs déplaçables ;
+   - **Déplacer** : les cartes, créneaux, événements, actualités et autres éléments de liste se glissent aussi avec leur poignée ⠿ ;
+   - **Mise en forme** : survolez un texte ou un bouton → **« Aa Style »** : police, taille, épaisseur, couleur, italique, souligné, majuscules, alignement, interligne, espacement des lettres ; pour un bouton, couleur de fond et arrondi ;
    - **Vidéos** : cliquez sur une photo → onglet « Vidéo (fichier) » (MP4/WebM, 40 Mo max., lecture automatique possible) ou « Vidéo YouTube » ;
    - **Réseaux sociaux** : cliquez sur une icône à droite d'« Adhérer » pour changer son adresse, « + » pour en ajouter ;
    - **Mentions légales** : liste « Page » en haut → « Mentions légales » (textes, rubriques, bandeau des cookies) ;
-   - **Apparence** : couleurs, polices et animation des notes de musique.
+   - **Apparence** : couleurs, polices, taille du texte de tout le site, couleur et forme des boutons, animation des notes de musique.
 4. Cliquez sur **Publier** : le site est mis à jour immédiatement.
 
 Rien n'est en ligne tant que vous n'avez pas publié. Vos modifications sont gardées sur votre appareil si vous fermez la page. Dans l'agenda, les événements passés sont masqués automatiquement.
