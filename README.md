@@ -22,26 +22,24 @@ Rien n'est en ligne tant que vous n'avez pas publié. Vos modifications sont gar
 
 Après 5 mots de passe faux, la connexion est bloquée 15 minutes pour l'appareil concerné.
 
-## Identifiant et mot de passe : le fichier `.env`
+## Sécurité
 
-L'identifiant et le mot de passe sont dans un fichier `.env` (modèle : `.env.example`) :
-
-```
-ADMIN_USER=identifiant
-ADMIN_PASSWORD=mot-de-passe
-```
-
-- Il n'est **jamais** envoyé sur GitHub (exclu par `.gitignore`).
-- Sur OVH, il se place à la **racine de l'hébergement, à côté du dossier `www`** (pas dedans) : il est alors inaccessible depuis Internet.
-- Pour changer le mot de passe, modifiez ce fichier et renvoyez-le sur l'hébergement.
+- **Identifiant et mot de passe** dans le fichier `.env` (modèle : `.env.example`), placé sur OVH **à la racine de l'hébergement, à côté du dossier `www`** : inaccessible depuis Internet, jamais envoyé sur GitHub.
+- **Mot de passe jamais stocké en clair** : à la première connexion, l'administration impose un nouveau mot de passe (12 caractères minimum, sans mot évident). Le serveur n'en garde qu'une empreinte Argon2id.
+- **Double authentification** (bouton **Sécurité**) : un code à 6 chiffres d'une application (Google Authenticator, Microsoft Authenticator, Aegis…) est demandé à chaque connexion. Plusieurs responsables peuvent scanner le même QR code. Téléphone perdu : retirez la ligne `ADMIN_TOTP_SECRET` du `.env` sur l'hébergement.
+- **Blocage des essais** : 5 erreurs par appareil en 15 minutes, 40 erreurs pour tout le site en 1 heure.
+- **Sessions** : cookie sécurisé (HTTPS uniquement, inaccessible aux scripts, même site), fin de session après 2 h d'inactivité (7 jours avec « Rester connecté »), session coupée si le cookie est utilisé depuis un autre navigateur. Changer le mot de passe ou la double authentification déconnecte tous les autres appareils.
+- **Journal** des connexions et publications : bouton **Sécurité**.
+- **Serveur** : HTTPS obligatoire (HSTS), en-têtes de sécurité stricts (CSP, anti-iframe…), aucun programme exécutable dans les dossiers de photos et de contenu, dossiers non listables, sauvegarde avant chaque publication (30 dernières dans `mwasa-data/backups/`).
+- **Compte OVH** : activez la double authentification du compte OVH (espace client → votre compte → Sécurité).
 
 ## Mettre le site en ligne sur OVH (FileZilla)
 
-1. Dans l'espace client OVH : **Web Cloud → Hébergements → votre hébergement → FTP-SSH**. Notez le serveur FTP et l'identifiant ; définissez le mot de passe FTP si besoin.
-2. Dans FileZilla, connectez-vous à ce serveur.
+1. Espace client OVH → **Web Cloud → Hébergements → mwasamusiki.com → FTP-SSH** : identifiant `mwasamv`. Si vous ne connaissez pas le mot de passe, utilisez « Modifier le mot de passe » sur la ligne `mwasamv`.
+2. FileZilla → Fichier → Gestionnaire de sites → Nouveau site : protocole **SFTP**, hôte `ssh.cluster129.hosting.ovh.net`, port `22`, identifiant `mwasamv`.
 3. Envoyez **le contenu** du dossier `www` de ce projet dans le dossier `www` de l'hébergement.
 4. Envoyez le fichier `.env` à la racine de l'hébergement (au même niveau que le dossier `www`).
-5. Ouvrez https://mwasamusiki.com/admin/ et connectez-vous.
+5. Ouvrez https://mwasamusiki.com/admin/, connectez-vous, choisissez votre mot de passe définitif puis activez la double authentification.
 
 **Attention lors d'une mise à jour du code** : n'écrasez pas `www/content/site.json`, `www/index.html` ni `www/img/uploads/` sur l'hébergement, car ils contiennent les modifications faites depuis l'administration.
 

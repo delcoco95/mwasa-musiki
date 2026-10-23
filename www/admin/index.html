@@ -27,6 +27,14 @@
       <button type="submit" class="btn btn-fill" id="pw-btn">Se connecter</button>
       <p class="mwa-error" id="pw-error" role="alert" hidden></p>
     </form>
+    <form id="code-form" novalidate hidden>
+      <label for="code">Code de vérification</label>
+      <p class="mwa-hint">Ouvrez votre application d'authentification et saisissez le code à 6 chiffres de « Mwasa Musiki ».</p>
+      <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" required>
+      <button type="submit" class="btn btn-fill" id="code-btn">Valider</button>
+      <p class="mwa-error" id="code-error" role="alert" hidden></p>
+      <button type="button" class="mwa-linkbtn" id="code-back">← Revenir au mot de passe</button>
+    </form>
   </div>
 </section>
 
@@ -38,6 +46,7 @@
     <div class="mwa-actions">
       <button type="button" class="mwa-btn" id="help-btn">Aide</button>
       <button type="button" class="mwa-btn" id="theme-btn">Apparence</button>
+      <button type="button" class="mwa-btn" id="security-btn">Sécurité</button>
       <a class="mwa-btn" href="../" target="_blank" rel="noopener">Voir le site</a>
       <button type="button" class="mwa-btn" id="discard-btn" disabled>Annuler les modifications</button>
       <button type="button" class="mwa-btn mwa-primary" id="publish-btn" disabled>Publier</button>
@@ -67,6 +76,7 @@
 <div id="toast" class="mwa-toast" role="status" aria-live="polite" hidden></div>
 <input type="file" id="file" accept="image/*" hidden>
 
+<script src="../assets/admin/vendor/qrcode.js"></script>
 <script src="../assets/render.js"></script>
 <script src="../assets/admin/admin.js"></script>
 </body>

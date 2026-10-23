@@ -93,26 +93,159 @@
   }
 
   /* ---------- Connexion ---------- */
-  function showLogin(msg) {
+  function showLogin(msg, step) {
     $('login').hidden = false; $('bar').hidden = true; $('preview').hidden = true; $('tip').hidden = true;
-    $('pw-error').hidden = !msg;
-    if (msg) $('pw-error').textContent = msg;
-    setTimeout(function () { $('pw-user').focus(); }, 50);
+    var code = step === 'code';
+    $('pw-form').hidden = code; $('code-form').hidden = !code;
+    var err = code ? $('code-error') : $('pw-error');
+    $('pw-error').hidden = true; $('code-error').hidden = true;
+    if (msg) { err.textContent = msg; err.hidden = false; }
+    setTimeout(function () { (code ? $('code') : $('pw-user')).focus(); }, 50);
+  }
+  function afterLogin(j) {
+    state.csrf = j.csrf;
+    state.security = { mustChangePassword: !!j.mustChangePassword, twoFactor: !!j.twoFactor };
+    $('pw-pass').value = ''; $('code').value = '';
+    return loadContent().then(function () {
+      $('login').hidden = true;
+      startEditor();
+      if (state.security.mustChangePassword) forcePasswordChange();
+    });
   }
   function login(user, pass, remember) {
     var b = $('pw-btn'); b.disabled = true; b.textContent = 'Connexion…';
     api('login', { user: user, pass: pass, remember: remember }).then(function (j) {
-      state.csrf = j.csrf;
-      $('pw-pass').value = '';
-      return loadContent();
-    }).then(function () {
-      $('login').hidden = true;
-      startEditor();
+      if (j.needCode) { $('pw-pass').value = ''; showLogin('', 'code'); return; }
+      return afterLogin(j);
     }).catch(function (err) {
       showLogin(friendly(err));
     }).finally(function () {
       b.disabled = false; b.textContent = 'Se connecter';
     });
+  }
+  function loginCode(code) {
+    var b = $('code-btn'); b.disabled = true; b.textContent = 'Vérification…';
+    api('login_code', { code: code }).then(afterLogin).catch(function (err) {
+      if (err.status === 401 && /délai/i.test(err.message)) showLogin(friendly(err));
+      else showLogin(friendly(err), 'code');
+    }).finally(function () { b.disabled = false; b.textContent = 'Valider'; });
+  }
+
+  /* ---------- Sécurité : mot de passe, double authentification, journal ---------- */
+  function strengthHint(pw) {
+    var kinds = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter(function (r) { return r.test(pw); }).length;
+    var score = Math.min(4, Math.floor(pw.length / 5) + kinds - 1);
+    if (pw.length < 12) score = Math.min(score, 1);
+    return Math.max(0, score);
+  }
+  function passwordFields(withCurrent) {
+    return (withCurrent ? field('s-cur', 'Mot de passe actuel', '', 'password') : '') +
+      field('s-new', 'Nouveau mot de passe', '', 'password', 'Au moins 12 caractères. Le plus simple et le plus sûr : une phrase, par exemple « 3 chorales chantent sous la pluie ! ». N\'utilisez pas un mot de passe d\'un autre compte.') +
+      '<div class="mwa-strength" aria-hidden="true"><i id="s-meter"></i></div>' +
+      field('s-new2', 'Confirmer le nouveau mot de passe', '', 'password');
+  }
+  function wireMeter() {
+    var inp = document.getElementById('s-new'), m = document.getElementById('s-meter');
+    inp.setAttribute('autocomplete', 'new-password'); document.getElementById('s-new2').setAttribute('autocomplete', 'new-password');
+    var cur = document.getElementById('s-cur'); if (cur) cur.setAttribute('autocomplete', 'current-password');
+    inp.addEventListener('input', function () {
+      var sc = strengthHint(inp.value);
+      m.style.width = (sc + 1) * 20 + '%';
+      m.style.background = ['#c0392b', '#e67e22', '#f1c40f', '#7dbb3c', '#1f8f4e'][sc];
+    });
+  }
+  function submitPasswordChange(current) {
+    var n1 = document.getElementById('s-new').value, n2 = document.getElementById('s-new2').value;
+    if (n1 !== n2) { toast('Les deux nouveaux mots de passe ne sont pas identiques.', 'err'); return false; }
+    if (n1.length < 12) { toast('Le mot de passe doit faire au moins 12 caractères.', 'err'); return false; }
+    $('pop-ok').disabled = true;
+    api('change_password', { current: current, new: n1 }).then(function (j) {
+      state.csrf = j.csrf; state.security.mustChangePassword = false;
+      closePop(); $('pop-cancel').hidden = false;
+      toast('Mot de passe changé. Les autres appareils ont été déconnectés.', 'ok', 7000);
+    }).catch(function (err) {
+      if (!onSessionLost(err)) toast(friendly(err), 'err', 9000);
+    }).finally(function () { $('pop-ok').disabled = false; });
+    return false; // la fenêtre se ferme seulement en cas de succès
+  }
+  function forcePasswordChange() {
+    openPop('Choisissez votre mot de passe',
+      '<p class="mwa-warn">Pour la sécurité du site, remplacez le mot de passe de départ par un mot de passe personnel. Il ne sera enregistré que sous forme chiffrée : personne, pas même l\'hébergeur, ne pourra le lire.</p>' +
+      passwordFields(true), function () { return submitPasswordChange(document.getElementById('s-cur').value); }, 'Enregistrer');
+    $('pop-cancel').hidden = true;
+    state._forced = true;
+    wireMeter();
+  }
+  function securityPanel() {
+    var sec = state.security || {};
+    openPop('Sécurité',
+      '<div class="mwa-sec" style="display:flex;flex-direction:column;gap:.8rem">' +
+      '<h3>Double authentification <span class="state ' + (sec.twoFactor ? 'on">Activée' : 'off">Désactivée') + '</span></h3>' +
+      '<p class="mwa-note">' + (sec.twoFactor ? 'Un code à 6 chiffres est demandé à chaque connexion, en plus du mot de passe.' :
+        'Recommandé : en plus du mot de passe, un code à 6 chiffres affiché par une application sur téléphone (Google Authenticator, Microsoft Authenticator, Aegis…) sera demandé. Même si le mot de passe fuit, personne ne pourra se connecter sans le téléphone.') + '</p>' +
+      '<button type="button" class="mwa-btn ' + (sec.twoFactor ? 'mwa-danger' : 'mwa-primary') + '" id="s-2fa">' + (sec.twoFactor ? 'Désactiver la double authentification' : 'Activer la double authentification') + '</button>' +
+      '<h3>Mot de passe</h3><button type="button" class="mwa-btn" id="s-pw">Changer le mot de passe</button>' +
+      '<h3>Dernières connexions</h3><ul class="mwa-log" id="s-log"><li>Chargement…</li></ul></div>',
+      function () { return true; }, 'Fermer');
+    $('pop-cancel').hidden = true;
+    document.getElementById('s-pw').addEventListener('click', function () {
+      openPop('Changer le mot de passe', passwordFields(true), function () { return submitPasswordChange(document.getElementById('s-cur').value); }, 'Enregistrer');
+      $('pop-cancel').hidden = false; wireMeter();
+    });
+    document.getElementById('s-2fa').addEventListener('click', sec.twoFactor ? disable2fa : enable2fa);
+    api('security_log').then(function (j) {
+      var ul = document.getElementById('s-log'); if (!ul) return;
+      ul.innerHTML = (j.entries || []).map(function (e) {
+        var d = new Date(e.t), bad = /refus/.test(e.e);
+        return '<li class="' + (bad ? 'bad' : '') + '"><time>' + R.esc(d.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })) + '</time><span>' + R.esc(e.e) + ' · ' + R.esc(e.ip) + '</span></li>';
+      }).join('') || '<li>Aucune connexion enregistrée.</li>';
+    }).catch(function () {});
+  }
+  function qrSVG(text) {
+    if (typeof window.qrcode !== 'function') return '';
+    var q = window.qrcode(0, 'M'); q.addData(text); q.make();
+    return q.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+  }
+  function enable2fa() {
+    api('totp_setup', {}).then(function (j) {
+      openPop('Activer la double authentification',
+        '<ol style="margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:.4rem;font-size:.92rem">' +
+        '<li>Installez une application d\'authentification sur votre téléphone (Google Authenticator, Microsoft Authenticator ou Aegis).</li>' +
+        '<li>Dans l\'application, ajoutez un compte en scannant ce QR code.</li>' +
+        '<li>Saisissez ci-dessous le code à 6 chiffres affiché, puis votre mot de passe.</li></ol>' +
+        '<div class="mwa-qr">' + qrSVG(j.uri) + '</div>' +
+        '<p class="mwa-hint">Impossible de scanner ? Saisissez cette clé dans l\'application :</p><p class="mwa-secret">' + R.esc(j.secret.replace(/(.{4})/g, '$1 ').trim()) + '</p>' +
+        '<p class="mwa-warn">Les autres responsables peuvent scanner le même QR code maintenant, sur leur propre téléphone. Si tous les téléphones sont perdus, il faudra retirer la ligne ADMIN_TOTP_SECRET du fichier .env sur l\'hébergement.</p>' +
+        field('s-code', 'Code à 6 chiffres', '', 'text') + field('s-pass', 'Votre mot de passe', '', 'password'),
+        function () {
+          $('pop-ok').disabled = true;
+          api('totp_enable', { code: val('s-code'), password: document.getElementById('s-pass').value }).then(function (r) {
+            state.csrf = r.csrf; state.security.twoFactor = true; closePop(); $('pop-cancel').hidden = false;
+            toast('Double authentification activée. Les autres appareils ont été déconnectés.', 'ok', 8000);
+          }).catch(function (err) { if (!onSessionLost(err)) toast(friendly(err), 'err', 9000); })
+            .finally(function () { $('pop-ok').disabled = false; });
+          return false;
+        }, 'Activer');
+      $('pop-cancel').hidden = false;
+      var c = document.getElementById('s-code'); c.setAttribute('inputmode', 'numeric'); c.setAttribute('autocomplete', 'one-time-code');
+      document.getElementById('s-pass').setAttribute('autocomplete', 'current-password');
+    }).catch(function (err) { if (!onSessionLost(err)) toast(friendly(err), 'err'); });
+  }
+  function disable2fa() {
+    openPop('Désactiver la double authentification',
+      '<p class="mwa-warn">Sans double authentification, le mot de passe seul protège le site.</p>' +
+      field('s-code', 'Code à 6 chiffres actuel', '', 'text') + field('s-pass', 'Votre mot de passe', '', 'password'),
+      function () {
+        $('pop-ok').disabled = true;
+        api('totp_disable', { code: val('s-code'), password: document.getElementById('s-pass').value }).then(function (r) {
+          state.csrf = r.csrf; state.security.twoFactor = false; closePop(); $('pop-cancel').hidden = false;
+          toast('Double authentification désactivée.', 'ok');
+        }).catch(function (err) { if (!onSessionLost(err)) toast(friendly(err), 'err', 9000); })
+          .finally(function () { $('pop-ok').disabled = false; });
+        return false;
+      }, 'Désactiver', true);
+    $('pop-cancel').hidden = false;
+    document.getElementById('s-pass').setAttribute('autocomplete', 'current-password');
   }
   function logout() {
     api('logout', {}).catch(function () {}).then(function () { location.reload(); });
@@ -509,6 +642,15 @@
       login(u, pw, $('pw-remember').checked);
     });
     $('theme-btn').addEventListener('click', editTheme);
+    $('security-btn').addEventListener('click', securityPanel);
+    $('code-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var c = $('code').value.replace(/\D/g, '');
+      if (c.length !== 6) { showLogin('Le code fait 6 chiffres.', 'code'); return; }
+      loginCode(c);
+    });
+    $('code').addEventListener('input', function () { if ($('code').value.replace(/\D/g, '').length === 6) $('code-form').requestSubmit(); });
+    $('code-back').addEventListener('click', function () { showLogin(''); });
     $('preview').addEventListener('click', onPreviewClick);
     $('publish-btn').addEventListener('click', publish);
     $('discard-btn').addEventListener('click', discard);
@@ -536,6 +678,7 @@
       if (!popSubmit || popSubmit() !== false) { state._themeBefore = undefined; closePop(); $('pop-cancel').hidden = false; }
     });
     var cancelPop = function () {
+      if (state.security && state.security.mustChangePassword && $('pop-title').textContent === 'Choisissez votre mot de passe') return;
       state._newImage = null;
       if (state._themeBefore !== undefined && $('pop-title').textContent === 'Apparence du site') { state.data.theme = state._themeBefore; applyTheme(); }
       state._themeBefore = undefined;
@@ -548,7 +691,7 @@
     window.addEventListener('beforeunload', function (e) { if (state.changes) { saveDraft(); } });
 
     api('session').then(function (j) {
-      if (j.logged) { state.csrf = j.csrf; return loadContent().then(startEditor); }
+      if (j.logged) return afterLogin(j);
       showLogin();
     }).catch(function (err) { showLogin(friendly(err)); });
   }

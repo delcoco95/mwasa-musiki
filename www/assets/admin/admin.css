@@ -122,3 +122,20 @@
 .mwa-warn { font-size: .85rem; color: #7a3b00; background: #fff1d6; border-radius: 6px; padding: .6rem .7rem; }
 .mwa-small { font-size: .85rem; margin-top: -.4rem; }
 .mwa-small a { color: var(--accent-ink); }
+
+.mwa-hint { font-size: .85rem; color: var(--muted); margin: -.2rem 0 .2rem; }
+#code { font-size: 1.6rem; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; padding: .7rem; border: 2px solid var(--line); border-radius: 8px; }
+#code:focus { border-color: var(--orange); outline: none; }
+.mwa-sec h3 { font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; margin-top: .4rem; }
+.mwa-sec .state { display: inline-block; font-size: .78rem; font-weight: 800; padding: .2rem .55rem; border-radius: 999px; }
+.mwa-sec .on { background: #dff3e6; color: #1f6f43; }
+.mwa-sec .off { background: #fde4df; color: #a1221a; }
+.mwa-qr { display: flex; justify-content: center; background: #fff; padding: .6rem; border-radius: 8px; border: 1px solid var(--line); }
+.mwa-qr svg, .mwa-qr img { width: 200px; height: 200px; }
+.mwa-secret { font-family: ui-monospace, monospace; font-size: .85rem; word-break: break-all; background: var(--creme); padding: .5rem .6rem; border-radius: 6px; user-select: all; }
+.mwa-log { list-style: none; margin: 0; padding: 0; font-size: .8rem; max-height: 14rem; overflow: auto; border: 1px solid var(--line); border-radius: 6px; }
+.mwa-log li { padding: .4rem .6rem; border-bottom: 1px solid var(--line); display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); gap: .5rem; }
+.mwa-log li.bad { background: #fff3f1; }
+.mwa-log time { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mwa-strength { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.mwa-strength i { display: block; height: 100%; width: 0; transition: width .2s, background .2s; }
