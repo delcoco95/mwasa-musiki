@@ -1,9 +1,9 @@
-// Génère index.html à partir de content/site.json (même code que le bouton « Publier » de l'administration).
+// Génère www/accueil.html (page d'accueil) à partir de content/site.json (même code que le bouton « Publier » de l'administration).
 const fs = require('fs');
 const { fullDocument } = require('./www/assets/render.js');
 const data = JSON.parse(fs.readFileSync(__dirname + '/www/content/site.json', 'utf8'));
-fs.writeFileSync(__dirname + '/www/index.html', fullDocument(data));
-console.log('index.html généré');
+fs.writeFileSync(__dirname + '/www/accueil.html', fullDocument(data));
+console.log('accueil.html généré');
 
 // Listes de commandes sftp utilisées par envoyer-sur-ovh.bat (droits : dossiers 755, fichiers 644, .env 600).
 const path = require('path');
@@ -17,12 +17,10 @@ const all = walk('www').concat([{ dir: 'www' }]).sort((a, b) => (a.dir || a.file
 const dirs = all.filter(x => x.dir).map(x => x.dir).sort((a, b) => a.split('/').length - b.split('/').length);
 const files = all.filter(x => x.file).map(x => x.file);
 // Contenus gérés par l'administration : envoyés seulement à la première installation
-const managed = f => f === 'www/index.html' || f === 'www/content/site.json' || (f.startsWith('www/img/uploads/') && !f.endsWith('.htaccess'));
+const managed = f => f === 'www/accueil.html' || f === 'www/content/site.json' || (f.startsWith('www/img/uploads/') && !f.endsWith('.htaccess'));
 function script(list, withEnv) {
   const L = [];
   dirs.forEach(d => L.push('-mkdir ' + d));
-  // OVH place un raccourci « Site en construction » à la place de www/index.html : on le retire avant l'envoi
-  if (list.includes('www/index.html')) L.push('-rm www/index.html');
   list.forEach(f => L.push('put ' + f + ' ' + f));
   dirs.forEach(d => L.push('chmod 755 ' + d));
   list.forEach(f => L.push('chmod 644 ' + f));

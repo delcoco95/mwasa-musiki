@@ -32,6 +32,7 @@ define('IDLE_LONG', 7 * 86400);         // inactivité max avec « rester connec
 define('MAX_LONG', 30 * 86400);         // durée max avec « rester connecté »
 define('PENDING_2FA', 5 * 60);          // délai pour saisir le code après le mot de passe
 define('MIN_PASSWORD', 12);
+define('PAGE', 'accueil.html');      // page d'accueil publiée (OVH bloque www/index.html)
 
 function out($code, $data) { http_response_code($code); echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES); exit; }
 function fail($code, $msg, $extra = array()) { out($code, array_merge(array('ok' => false, 'error' => $msg), $extra)); }
@@ -118,11 +119,11 @@ function backup_current() {
     $dir = data_dir() . '/backups';
     $stamp = date('Ymd-His');
     if (is_file(content_path())) @copy(content_path(), "$dir/$stamp-site.json");
-    if (is_file(WWW . '/index.html')) @copy(WWW . '/index.html', "$dir/$stamp-index.html");
+    if (is_file(WWW . '/' . PAGE)) @copy(WWW . '/' . PAGE, "$dir/$stamp-accueil.html");
     $files = glob("$dir/*-site.json");
     if ($files && count($files) > 30) {
         sort($files);
-        foreach (array_slice($files, 0, count($files) - 30) as $old) { @unlink($old); @unlink(str_replace('-site.json', '-index.html', $old)); }
+        foreach (array_slice($files, 0, count($files) - 30) as $old) { @unlink($old); @unlink(str_replace('-site.json', '-accueil.html', $old)); }
     }
 }
 
@@ -311,7 +312,7 @@ function session_info($env) {
 $action = isset($_GET['action']) ? (string) $_GET['action'] : '';
 $method = $_SERVER['REQUEST_METHOD'];
 
-if ($action === 'ping') out(200, array('ok' => true, 'php' => PHP_VERSION, 'https' => is_https(), 'env' => env_file() !== null, 'envOutsideWww' => env_file() === dirname(WWW) . '/.env'));
+if ($action === 'ping') out(200, array('ok' => true, 'php' => PHP_VERSION, 'https' => is_https(), 'env' => env_file() !== null, 'envOutsideWww' => env_file() === dirname(WWW) . '/.env', 'page' => is_file(WWW . '/' . PAGE)));
 
 $env = load_env();
 start_session();
@@ -425,7 +426,7 @@ switch ($action) {
         require_login();
         $text = is_file(content_path()) ? (string) file_get_contents(content_path()) : '';
         if ($text === '') fail(500, 'Fichier de contenu introuvable (content/site.json).');
-        out(200, array('ok' => true, 'content' => $text, 'version' => content_version($text)));
+        out(200, array('ok' => true, 'content' => $text, 'version' => content_version($text), 'pageMissing' => !is_file(WWW . '/' . PAGE)));
 
     case 'upload':
         if ($method !== 'POST') fail(405, 'Méthode non autorisée.');
@@ -464,7 +465,7 @@ switch ($action) {
         if ($missing) fail(400, 'Photo manquante sur le serveur : ' . implode(', ', array_slice($missing, 0, 3)));
         backup_current();
         atomic_write(content_path(), $content);
-        atomic_write(WWW . '/index.html', $html);
+        atomic_write(WWW . '/' . PAGE, $html);
         auth_log('publication');
         out(200, array('ok' => true, 'version' => content_version($content)));
 

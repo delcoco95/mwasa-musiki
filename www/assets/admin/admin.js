@@ -1,7 +1,7 @@
 /*
  * Mwasa Musiki : administration du site.
  * Connexion par identifiant et mot de passe (vérifiés par le serveur, fichier .env).
- * « Publier » envoie les nouvelles photos puis le contenu et la page index.html régénérée à admin/api.php,
+ * « Publier » envoie les nouvelles photos puis le contenu et la page d'accueil (accueil.html) régénérée à admin/api.php,
  * qui les enregistre sur l'hébergement.
  */
 (function () {
@@ -85,6 +85,7 @@
       state.contentSha = j.version;
       state.saved = j.content;
       state.data = JSON.parse(j.content);
+      state.pageMissing = !!j.pageMissing;
     });
   }
   function friendly(err) {
@@ -109,6 +110,7 @@
     return loadContent().then(function () {
       $('login').hidden = true;
       startEditor();
+      if (state.pageMissing) regeneratePage();
       if (state.security.mustChangePassword) forcePasswordChange();
     });
   }
@@ -246,6 +248,14 @@
       }, 'Désactiver', true);
     $('pop-cancel').hidden = false;
     document.getElementById('s-pass').setAttribute('autocomplete', 'current-password');
+  }
+  /* Recrée la page d'accueil si elle n'existe pas encore sur le serveur (première installation). */
+  function regeneratePage() {
+    var saved = JSON.parse(state.saved);
+    api('publish', { base: state.contentSha, content: state.saved, html: R.fullDocument(saved) }).then(function (j) {
+      state.contentSha = j.version; state.pageMissing = false;
+      toast('Page d\'accueil du site créée.', 'ok', 6000);
+    }).catch(function (err) { toast('Création de la page d\'accueil impossible : ' + friendly(err), 'err', 9000); });
   }
   function logout() {
     api('logout', {}).catch(function () {}).then(function () { location.reload(); });

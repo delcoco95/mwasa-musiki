@@ -1,6 +1,6 @@
 /*
  * Mwasa Musiki : fabrication de la page à partir de content/site.json.
- * Utilisé par l'administration (aperçu modifiable + génération de index.html)
+ * Utilisé par l'administration (aperçu modifiable + génération de la page d'accueil accueil.html)
  * et par le script de génération initial.
  */
 (function (root, factory) {
@@ -266,7 +266,7 @@
     return h.join('\n');
   }
 
-  // Document complet publié (index.html)
+  // Document complet publié (accueil.html)
   function fullDocument(data) {
     var m = data.meta || {};
     return '<!doctype html>\n<html lang="fr">\n<head>\n<meta charset="utf-8">\n' +

@@ -46,7 +46,7 @@ Aucun logiciel à installer : le fichier **`envoyer-sur-ovh.bat`** utilise l'out
 
 Le site va dans le dossier `www` de l'hébergement et le fichier `.env` à sa racine, à côté de `www` (inaccessible depuis Internet).
 
-**Attention lors d'une mise à jour du code** : n'écrasez pas `www/content/site.json`, `www/index.html` ni `www/img/uploads/` sur l'hébergement, car ils contiennent les modifications faites depuis l'administration.
+**Attention lors d'une mise à jour du code** : n'écrasez pas `www/content/site.json`, `www/accueil.html` ni `www/img/uploads/` sur l'hébergement, car ils contiennent les modifications faites depuis l'administration.
 
 Avant chaque publication, le serveur garde une sauvegarde de la version précédente dans `mwasa-data/backups/` (à la racine de l'hébergement, les 30 dernières).
 
@@ -54,11 +54,11 @@ Avant chaque publication, le serveur garde une sauvegarde de la version précéd
 
 - `www/` : tout ce qui est en ligne
   - `content/site.json` : tout le contenu (textes, photos, horaires, agenda, actualités, apparence)
-  - `index.html` : la page publiée, **générée automatiquement** à chaque publication
+  - `accueil.html` : la page d'accueil publiée, **générée automatiquement** à chaque publication (OVH réserve `index.html` à sa page « Site en construction »)
   - `admin/` : l'administration (`api.php` vérifie la connexion et enregistre les modifications)
   - `assets/` : fabrication de la page (`render.js`), styles, polices hébergées sur le site
   - `img/photos/` : photos de l'association ; `img/uploads/` : photos ajoutées depuis l'administration
-- `build.js` : régénère `www/index.html` en local (`node build.js`) après une modification manuelle de `site.json`
+- `build.js` : régénère `www/accueil.html` en local (`node build.js`) après une modification manuelle de `site.json`
 - `index.html` (à la racine) : redirige l'ancienne adresse GitHub Pages vers mwasamusiki.com
 
 ## Crédits

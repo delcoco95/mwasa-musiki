@@ -8,8 +8,8 @@
 -mkdir www/img/photos
 -mkdir www/img/uploads
 -mkdir www/assets/admin/vendor
--rm www/index.html
 put www/.htaccess www/.htaccess
+put www/accueil.html www/accueil.html
 put www/admin/.htaccess www/admin/.htaccess
 put www/admin/api.php www/admin/api.php
 put www/admin/index.html www/admin/index.html
@@ -58,7 +58,6 @@ put www/img/photos/opera-logo.webp www/img/photos/opera-logo.webp
 put www/img/photos/tournage-nice.webp www/img/photos/tournage-nice.webp
 put www/img/uploads/.htaccess www/img/uploads/.htaccess
 put www/img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp www/img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp
-put www/index.html www/index.html
 chmod 755 www
 chmod 755 www/admin
 chmod 755 www/assets
@@ -70,6 +69,7 @@ chmod 755 www/img/photos
 chmod 755 www/img/uploads
 chmod 755 www/assets/admin/vendor
 chmod 644 www/.htaccess
+chmod 644 www/accueil.html
 chmod 644 www/admin/.htaccess
 chmod 644 www/admin/api.php
 chmod 644 www/admin/index.html
@@ -118,7 +118,6 @@ chmod 644 www/img/photos/opera-logo.webp
 chmod 644 www/img/photos/tournage-nice.webp
 chmod 644 www/img/uploads/.htaccess
 chmod 644 www/img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp
-chmod 644 www/index.html
 put .env .env
 chmod 600 .env
 bye
