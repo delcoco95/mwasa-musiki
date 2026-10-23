@@ -62,11 +62,14 @@ goto fin
 
 :fin
 echo.
-if errorlevel 1 (
-  echo  L'envoi a echoue. Verifiez le mot de passe FTP et votre connexion Internet, puis relancez.
-) else (
-  echo  Envoi termine. Les messages "mkdir ... failure" sont normaux (dossier deja present).
-  echo  Ouvrez https://mwasamusiki.com
-)
+if errorlevel 1 goto echec
+echo  Envoi termine. Les messages "remote mkdir ... Failure" sont normaux : dossiers deja presents.
+echo  Ouvrez https://mwasamusiki.com/admin/
+goto termine
+
+:echec
+echo  L'envoi a echoue. Verifiez le mot de passe FTP et votre connexion Internet, puis relancez.
+
+:termine
 echo.
 pause
