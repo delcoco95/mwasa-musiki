@@ -33,13 +33,18 @@ Après 5 mots de passe faux, la connexion est bloquée 15 minutes pour l'apparei
 - **Serveur** : HTTPS obligatoire (HSTS), en-têtes de sécurité stricts (CSP, anti-iframe…), aucun programme exécutable dans les dossiers de photos et de contenu, dossiers non listables, sauvegarde avant chaque publication (30 dernières dans `mwasa-data/backups/`).
 - **Compte OVH** : activez la double authentification du compte OVH (espace client → votre compte → Sécurité).
 
-## Mettre le site en ligne sur OVH (FileZilla)
+## Mettre le site en ligne sur OVH
 
-1. Espace client OVH → **Web Cloud → Hébergements → mwasamusiki.com → FTP-SSH** : identifiant `mwasamv`. Si vous ne connaissez pas le mot de passe, utilisez « Modifier le mot de passe » sur la ligne `mwasamv`.
-2. FileZilla → Fichier → Gestionnaire de sites → Nouveau site : protocole **SFTP**, hôte `ssh.cluster129.hosting.ovh.net`, port `22`, identifiant `mwasamv`.
-3. Envoyez **le contenu** du dossier `www` de ce projet dans le dossier `www` de l'hébergement.
-4. Envoyez le fichier `.env` à la racine de l'hébergement (au même niveau que le dossier `www`).
-5. Ouvrez https://mwasamusiki.com/admin/, connectez-vous, choisissez votre mot de passe définitif puis activez la double authentification.
+Aucun logiciel à installer : le fichier **`envoyer-sur-ovh.bat`** utilise l'outil d'envoi sécurisé intégré à Windows 10 et 11 (`scp`, connexion chiffrée SFTP).
+
+1. Mot de passe FTP : espace client OVH → **Web Cloud → Hébergements → mwasamusiki.com → FTP-SSH** → « Modifier le mot de passe » sur la ligne `mwasamv`.
+2. Double-cliquez sur `envoyer-sur-ovh.bat` et choisissez :
+   - **1** pour la première installation (tout le site + le fichier `.env`) ;
+   - **2** pour une mise à jour du programme seulement, sans toucher aux contenus modifiés depuis l'administration.
+3. Tapez `yes` à la première connexion pour accepter le serveur OVH, puis le mot de passe FTP (il ne s'affiche pas, c'est normal).
+4. Ouvrez https://mwasamusiki.com/admin/, connectez-vous, choisissez votre mot de passe définitif puis activez la double authentification.
+
+Le site va dans le dossier `www` de l'hébergement et le fichier `.env` à sa racine, à côté de `www` (inaccessible depuis Internet).
 
 **Attention lors d'une mise à jour du code** : n'écrasez pas `www/content/site.json`, `www/index.html` ni `www/img/uploads/` sur l'hébergement, car ils contiennent les modifications faites depuis l'administration.
 
