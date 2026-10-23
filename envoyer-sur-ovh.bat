@@ -21,8 +21,8 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-if not exist "www\index.html" (
-  echo  Dossier "www" introuvable : lancez ce fichier depuis le dossier du projet.
+if not exist "deploy\installation.txt" (
+  echo  Dossier "deploy" introuvable : lancez ce fichier depuis le dossier du projet.
   pause
   exit /b 1
 )
@@ -53,27 +53,11 @@ if not exist ".env" (
   pause
   exit /b 1
 )
-set "CMD=%TEMP%\mwasa-envoi.txt"
-> "%CMD%" echo put -r www
->> "%CMD%" echo put .env
->> "%CMD%" echo chmod 600 .env
->> "%CMD%" echo bye
-sftp -o StrictHostKeyChecking=ask %COMPTE%@%HOTE% < "%CMD%"
+sftp %COMPTE%@%HOTE% < "deploy\installation.txt"
 goto fin
 
 :miseajour
-set "CMD=%TEMP%\mwasa-envoi.txt"
-> "%CMD%" echo put -r www/admin www/admin
->> "%CMD%" echo put -r www/assets www/assets
->> "%CMD%" echo put www/.htaccess www/.htaccess
->> "%CMD%" echo put -r www/img/photos www/img/photos
->> "%CMD%" echo put www/img/logo.svg www/img/logo.svg
->> "%CMD%" echo put www/img/logo.png www/img/logo.png
->> "%CMD%" echo put www/img/.htaccess www/img/.htaccess
->> "%CMD%" echo put www/img/uploads/.htaccess www/img/uploads/.htaccess
->> "%CMD%" echo put www/content/.htaccess www/content/.htaccess
->> "%CMD%" echo bye
-sftp -o StrictHostKeyChecking=ask %COMPTE%@%HOTE% < "%CMD%"
+sftp %COMPTE%@%HOTE% < "deploy\mise-a-jour.txt"
 goto fin
 
 :fin
@@ -81,7 +65,8 @@ echo.
 if errorlevel 1 (
   echo  L'envoi a echoue. Verifiez le mot de passe FTP et votre connexion Internet, puis relancez.
 ) else (
-  echo  Envoi termine. Verifiez ci-dessus qu'il n'y a pas de message d'erreur, puis ouvrez https://mwasamusiki.com
+  echo  Envoi termine. Les messages "mkdir ... failure" sont normaux (dossier deja present).
+  echo  Ouvrez https://mwasamusiki.com
 )
 echo.
 pause

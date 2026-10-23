@@ -1,0 +1,123 @@
+-mkdir www
+-mkdir www/admin
+-mkdir www/assets
+-mkdir www/content
+-mkdir www/img
+-mkdir www/assets/admin
+-mkdir www/assets/fonts
+-mkdir www/img/photos
+-mkdir www/img/uploads
+-mkdir www/assets/admin/vendor
+put www/.htaccess www/.htaccess
+put www/admin/.htaccess www/admin/.htaccess
+put www/admin/api.php www/admin/api.php
+put www/admin/index.html www/admin/index.html
+put www/assets/.htaccess www/assets/.htaccess
+put www/assets/admin/admin.css www/assets/admin/admin.css
+put www/assets/admin/admin.js www/assets/admin/admin.js
+put www/assets/admin/vendor/qrcode.js www/assets/admin/vendor/qrcode.js
+put www/assets/fonts/archivo-variable.woff2 www/assets/fonts/archivo-variable.woff2
+put www/assets/fonts/lora-variable.woff2 www/assets/fonts/lora-variable.woff2
+put www/assets/fonts/merriweather-variable.woff2 www/assets/fonts/merriweather-variable.woff2
+put www/assets/fonts/montserrat-variable.woff2 www/assets/fonts/montserrat-variable.woff2
+put www/assets/fonts/nunito-sans-variable.woff2 www/assets/fonts/nunito-sans-variable.woff2
+put www/assets/fonts/OFL-archivo.txt www/assets/fonts/OFL-archivo.txt
+put www/assets/fonts/OFL-lora.txt www/assets/fonts/OFL-lora.txt
+put www/assets/fonts/OFL-merriweather.txt www/assets/fonts/OFL-merriweather.txt
+put www/assets/fonts/OFL-montserrat.txt www/assets/fonts/OFL-montserrat.txt
+put www/assets/fonts/OFL-nunito-sans.txt www/assets/fonts/OFL-nunito-sans.txt
+put www/assets/fonts/OFL-open-sans.txt www/assets/fonts/OFL-open-sans.txt
+put www/assets/fonts/OFL-oswald.txt www/assets/fonts/OFL-oswald.txt
+put www/assets/fonts/OFL-playfair-display.txt www/assets/fonts/OFL-playfair-display.txt
+put www/assets/fonts/OFL-raleway.txt www/assets/fonts/OFL-raleway.txt
+put www/assets/fonts/OFL-source-sans-3.txt www/assets/fonts/OFL-source-sans-3.txt
+put www/assets/fonts/open-sans-variable.woff2 www/assets/fonts/open-sans-variable.woff2
+put www/assets/fonts/oswald-variable.woff2 www/assets/fonts/oswald-variable.woff2
+put www/assets/fonts/playfair-display-variable.woff2 www/assets/fonts/playfair-display-variable.woff2
+put www/assets/fonts/raleway-variable.woff2 www/assets/fonts/raleway-variable.woff2
+put www/assets/fonts/source-sans-3-variable.woff2 www/assets/fonts/source-sans-3-variable.woff2
+put www/assets/render.js www/assets/render.js
+put www/assets/site.css www/assets/site.css
+put www/assets/site.js www/assets/site.js
+put www/content/.htaccess www/content/.htaccess
+put www/content/site.json www/content/site.json
+put www/img/.htaccess www/img/.htaccess
+put www/img/logo.png www/img/logo.png
+put www/img/logo.svg www/img/logo.svg
+put www/img/photos/.htaccess www/img/photos/.htaccess
+put www/img/photos/adhesion-guitare.webp www/img/photos/adhesion-guitare.webp
+put www/img/photos/atelier-choeur.webp www/img/photos/atelier-choeur.webp
+put www/img/photos/atelier-direction.webp www/img/photos/atelier-direction.webp
+put www/img/photos/atelier-guitare.webp www/img/photos/atelier-guitare.webp
+put www/img/photos/atelier-solo.webp www/img/photos/atelier-solo.webp
+put www/img/photos/cabaret-21-juin.webp www/img/photos/cabaret-21-juin.webp
+put www/img/photos/groupe-association.webp www/img/photos/groupe-association.webp
+put www/img/photos/opera-chanteuse.webp www/img/photos/opera-chanteuse.webp
+put www/img/photos/opera-logo.webp www/img/photos/opera-logo.webp
+put www/img/photos/tournage-nice.webp www/img/photos/tournage-nice.webp
+put www/img/uploads/.htaccess www/img/uploads/.htaccess
+put www/img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp www/img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp
+put www/index.html www/index.html
+chmod 755 www
+chmod 755 www/admin
+chmod 755 www/assets
+chmod 755 www/content
+chmod 755 www/img
+chmod 755 www/assets/admin
+chmod 755 www/assets/fonts
+chmod 755 www/img/photos
+chmod 755 www/img/uploads
+chmod 755 www/assets/admin/vendor
+chmod 644 www/.htaccess
+chmod 644 www/admin/.htaccess
+chmod 644 www/admin/api.php
+chmod 644 www/admin/index.html
+chmod 644 www/assets/.htaccess
+chmod 644 www/assets/admin/admin.css
+chmod 644 www/assets/admin/admin.js
+chmod 644 www/assets/admin/vendor/qrcode.js
+chmod 644 www/assets/fonts/archivo-variable.woff2
+chmod 644 www/assets/fonts/lora-variable.woff2
+chmod 644 www/assets/fonts/merriweather-variable.woff2
+chmod 644 www/assets/fonts/montserrat-variable.woff2
+chmod 644 www/assets/fonts/nunito-sans-variable.woff2
+chmod 644 www/assets/fonts/OFL-archivo.txt
+chmod 644 www/assets/fonts/OFL-lora.txt
+chmod 644 www/assets/fonts/OFL-merriweather.txt
+chmod 644 www/assets/fonts/OFL-montserrat.txt
+chmod 644 www/assets/fonts/OFL-nunito-sans.txt
+chmod 644 www/assets/fonts/OFL-open-sans.txt
+chmod 644 www/assets/fonts/OFL-oswald.txt
+chmod 644 www/assets/fonts/OFL-playfair-display.txt
+chmod 644 www/assets/fonts/OFL-raleway.txt
+chmod 644 www/assets/fonts/OFL-source-sans-3.txt
+chmod 644 www/assets/fonts/open-sans-variable.woff2
+chmod 644 www/assets/fonts/oswald-variable.woff2
+chmod 644 www/assets/fonts/playfair-display-variable.woff2
+chmod 644 www/assets/fonts/raleway-variable.woff2
+chmod 644 www/assets/fonts/source-sans-3-variable.woff2
+chmod 644 www/assets/render.js
+chmod 644 www/assets/site.css
+chmod 644 www/assets/site.js
+chmod 644 www/content/.htaccess
+chmod 644 www/content/site.json
+chmod 644 www/img/.htaccess
+chmod 644 www/img/logo.png
+chmod 644 www/img/logo.svg
+chmod 644 www/img/photos/.htaccess
+chmod 644 www/img/photos/adhesion-guitare.webp
+chmod 644 www/img/photos/atelier-choeur.webp
+chmod 644 www/img/photos/atelier-direction.webp
+chmod 644 www/img/photos/atelier-guitare.webp
+chmod 644 www/img/photos/atelier-solo.webp
+chmod 644 www/img/photos/cabaret-21-juin.webp
+chmod 644 www/img/photos/groupe-association.webp
+chmod 644 www/img/photos/opera-chanteuse.webp
+chmod 644 www/img/photos/opera-logo.webp
+chmod 644 www/img/photos/tournage-nice.webp
+chmod 644 www/img/uploads/.htaccess
+chmod 644 www/img/uploads/cason-asher-tupiqx7mrx8-unsplash-mvijbjpn.webp
+chmod 644 www/index.html
+put .env .env
+chmod 600 .env
+bye
